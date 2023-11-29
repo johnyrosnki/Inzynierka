@@ -1,0 +1,29 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <title>Twój koszyk</title>
+</head>
+<body>
+    <h1>Twój koszyk</h1>
+    {% if ksiazki_w_koszyku %}
+        <ul>
+            {% for ksiazka in ksiazki_w_koszyku %}
+                <li>
+                    <h2>{{ ksiazka.tytul }}</h2>
+                    <p>Ilość: {{ ksiazka.ilosc }}</p>
+                    {% if ksiazka.okladka %}
+                        <img src="{{ ksiazka.okladka.url }}" alt="{{ ksiazka.tytul }} Okładka">
+                    {% else %}
+                        <p>Brak obrazka</p>
+                    {% endif %}
+                    <!-- Dodaj inne informacje o książce, które chcesz wyświetlić -->
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Twój koszyk jest pusty.</p>
+    {% endif %}
+    <a href="{% url 'lista_ksiazek' %}">Wróć do listy książek</a>
+</body>
+</html>

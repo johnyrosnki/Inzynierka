@@ -1,0 +1,29 @@
+<!-- templates/ksiazki_wedlug_kategorii.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Książki w Kategorii: {{ kategoria.nazwa }}</title>
+    <!-- Dodaj Bootstrap z CDN -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <h1>Książki w Kategorii: {{ kategoria.nazwa }}</h1>
+        <div class="row">
+            {% for ksiazka in ksiazki %}
+                <div class="col-md-3">
+                    <div class="card mb-3">
+                        <img src="{{ ksiazka.okladka.url }}" class="card-img-top" alt="{{ ksiazka.tytul }} Okładka">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ ksiazka.tytul }}</h5>
+                            <p class="card-text">{{ ksiazka.autor }}</p>
+                            <p class="card-text">{{ ksiazka.opis }}</p>
+                            <p class="card-text">Kategorie: {% for kategoria in ksiazka.kategorie.all %}{{ kategoria.nazwa }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
