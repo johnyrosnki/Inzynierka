@@ -1,4 +1,4 @@
-
+<!-- templates/wyswietl_koszyk.html -->
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -13,10 +13,14 @@
                     <h2>{{ ksiazka.tytul }}</h2>
                     <p>Ilość: {{ ksiazka.ilosc }}</p>
                     {% if ksiazka.okladka %}
-                        <img src="{{ ksiazka.okladka.url }}" alt="{{ ksiazka.tytul }} Okładka">
+                        <img src="{{ ksiazka.okladka }}" alt="{{ ksiazka.tytul }} Okładka">
                     {% else %}
                         <p>Brak obrazka</p>
                     {% endif %}
+                    <form action="{% url 'usun_z_koszyka' ksiazka.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="submit" value="Usuń z koszyka">
+                    </form>
                     <!-- Dodaj inne informacje o książce, które chcesz wyświetlić -->
                 </li>
             {% endfor %}

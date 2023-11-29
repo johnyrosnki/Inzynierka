@@ -8,6 +8,9 @@ from PIL import Image, ImageOps
 from .forms import KsiazkaForm
 from .models import Ksiazka, Kategoria
 from django.shortcuts import render, get_object_or_404
+from .forms import RejestracjaForm
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
 
 def index(request):
     return HttpResponse("Witaj w aplikacji mainapp!")
@@ -62,6 +65,15 @@ def dodaj_do_koszyka(request, ksiazka_id):
 # views.py
 from django.shortcuts import render
 
+def usun_z_koszyka(request, ksiazka_id):
+    koszyk = request.session.get('koszyk', {})
+
+    if str(ksiazka_id) in koszyk:
+        del koszyk[str(ksiazka_id)]
+        request.session['koszyk'] = koszyk
+
+    return redirect('wyswietl_koszyk')
+
 def wyswietl_koszyk(request):
     koszyk = request.session.get('koszyk', {})
     ksiazki_w_koszyku = []
@@ -69,16 +81,39 @@ def wyswietl_koszyk(request):
     for ksiazka_id, ksiazka_info in koszyk.items():
         # Tutaj możesz dodatkowo sprawdzić, czy książka o danym ID istnieje w bazie danych
         ksiazki_w_koszyku.append({
+            'id': ksiazka_id,
             'tytul': ksiazka_info['tytul'],
             'ilosc': ksiazka_info['ilosc'],
-            # Dodaj inne informacje, które chcesz wyświetlić
+            'okladka': ksiazka_info.get('okladka'),  # Możesz użyć get(), aby uniknąć błędów, jeśli okładka nie istnieje
         })
 
     return render(request, 'koszyk.html', {'ksiazki_w_koszyku': ksiazki_w_koszyku})
-def czysc_koszyk(request):
-    if 'koszyk' in request.session:
-        del request.session['koszyk']
-    return redirect('lista_ksiazek')
+
+def rejestracja(request):
+    if request.method == 'POST':
+        form = RejestracjaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('logowanie')  # Przekieruj na stronę logowania po udanej rejestracji
+    else:
+        form = RejestracjaForm()
+
+    return render(request, 'rejestracja.html', {'form': form})
+
+def logowanie(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect('lista_ksiazek')  # Przekieruj na stronę główną po udanym logowaniu
+        else:
+            messages.error(request, 'Błędne dane logowania.')
+
+    return render(request, 'logowanie.html')
+
 
 
 
