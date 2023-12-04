@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import render
 
 # Create your views here.
@@ -11,6 +13,8 @@ from django.shortcuts import render, get_object_or_404
 from .forms import RejestracjaForm
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
+from decimal import Decimal
+import json
 
 def index(request):
     return HttpResponse("Witaj w aplikacji mainapp!")
@@ -46,20 +50,22 @@ def ksiazki_wedlug_kategorii(request, kategoria_id):
 def dodaj_do_koszyka(request, ksiazka_id):
     ksiazka = Ksiazka.objects.get(pk=ksiazka_id)
 
-    # Sprawdź, czy sesja koszyka już istnieje, jeśli nie, utwórz pusty koszyk
     if 'koszyk' not in request.session:
         request.session['koszyk'] = {}
 
     koszyk = request.session['koszyk']
 
-    # Dodaj książkę do koszyka lub zwiększ liczbę, jeśli już tam jest
-    if ksiazka_id in koszyk:
-        koszyk[ksiazka_id]['ilosc'] += 1
+    if str(ksiazka_id) in koszyk:
+        koszyk[str(ksiazka_id)]['ilosc'] += 1
     else:
-        koszyk[ksiazka_id] = {'tytul': ksiazka.tytul, 'ilosc': 1}
+        koszyk[str(ksiazka_id)] = {
+            'tytul': ksiazka.tytul,
+            'ilosc': 1,
+            'cena': str(ksiazka.cena),  # Konwersja Decimal do str przed zapisaniem do sesji
+            'okladka': ksiazka.okladka.url if ksiazka.okladka else None,
+        }
 
-    # Zapisz zmiany w sesji
-    request.session['koszyk'] = koszyk
+    request.session['koszyk'] = json.loads(json.dumps(koszyk, default=str))  # Konwersja Decimal do str przed zapisaniem do sesji
 
     return redirect('lista_ksiazek')
 # views.py
@@ -76,18 +82,23 @@ def usun_z_koszyka(request, ksiazka_id):
 
 def wyswietl_koszyk(request):
     koszyk = request.session.get('koszyk', {})
+    suma_cen = Decimal(0.0)
+
+    for ksiazka_id, ksiazka_info in koszyk.items():
+        suma_cen += Decimal(ksiazka_info['ilosc']) * Decimal(ksiazka_info['cena'])
+
     ksiazki_w_koszyku = []
 
     for ksiazka_id, ksiazka_info in koszyk.items():
-        # Tutaj możesz dodatkowo sprawdzić, czy książka o danym ID istnieje w bazie danych
         ksiazki_w_koszyku.append({
             'id': ksiazka_id,
             'tytul': ksiazka_info['tytul'],
             'ilosc': ksiazka_info['ilosc'],
-            'okladka': ksiazka_info.get('okladka'),  # Możesz użyć get(), aby uniknąć błędów, jeśli okładka nie istnieje
+            'cena': Decimal(ksiazka_info['cena']),
+            'okladka': ksiazka_info.get('okladka'),
         })
 
-    return render(request, 'koszyk.html', {'ksiazki_w_koszyku': ksiazki_w_koszyku})
+    return render(request, 'wyswietl_koszyk.html', {'ksiazki_w_koszyku': ksiazki_w_koszyku, 'suma_cen': suma_cen})
 
 def rejestracja(request):
     if request.method == 'POST':
@@ -113,6 +124,25 @@ def logowanie(request):
             messages.error(request, 'Błędne dane logowania.')
 
     return render(request, 'logowanie.html')
+
+
+def zwieksz_ilosc(request, ksiazka_id):
+    koszyk = request.session.get('koszyk', {})
+    koszyk[str(ksiazka_id)]['ilosc'] += 1
+    request.session['koszyk'] = koszyk
+    return redirect('wyswietl_koszyk')
+
+
+def zmniejsz_ilosc(request, ksiazka_id):
+    koszyk = request.session.get('koszyk', {})
+
+    if koszyk[str(ksiazka_id)]['ilosc'] > 1:
+        koszyk[str(ksiazka_id)]['ilosc'] -= 1
+    else:
+        del koszyk[str(ksiazka_id)]  # Usuń pozycję z koszyka, jeśli ilość jest równa 1
+
+    request.session['koszyk'] = koszyk
+    return redirect('wyswietl_koszyk')
 
 
 

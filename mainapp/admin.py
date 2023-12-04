@@ -9,7 +9,7 @@ class KategoriaAdmin(admin.ModelAdmin):
 
 admin.site.register(Kategoria, KategoriaAdmin)
 class KsiazkaAdmin(admin.ModelAdmin):
-    list_display = ('tytul', 'autor', 'opis', 'okladka')
+    list_display = ('tytul', 'cena', 'autor', 'opis', 'okladka')
     search_fields = ['tytul', 'autor']
     filter_horizontal = ('kategorie',)
 

@@ -18,9 +18,12 @@
                             <h5 class="card-title">{{ ksiazka.tytul }}</h5>
                             <p class="card-text">{{ ksiazka.autor }}</p>
                             <p class="card-text">{{ ksiazka.opis }}</p>
+
                             <p class="card-text">Kategorie: {% for kategoria in ksiazka.kategorie.all %}<a href="{% url 'ksiazki_wedlug_kategorii' kategoria.id %}">{{ kategoria.nazwa }}</a>{% if not forloop.last %}, {% endif %}</p>
-                             <p></p>
+
+                                <p></p>
                             {% endfor %}
+                        <p class="card-text">{{ ksiazka.cena }}</p>
                         <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}">Dodaj do koszyka</a>
                         </div>
                     </div>

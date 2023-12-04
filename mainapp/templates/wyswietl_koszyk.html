@@ -1,0 +1,39 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <title>Twój koszyk</title>
+</head>
+<body>
+     <h1>Twój koszyk</h1>
+    {% if ksiazki_w_koszyku %}
+        <ul>
+            {% for ksiazka in ksiazki_w_koszyku %}
+                <li>
+                    <h2>{{ ksiazka.tytul }}</h2>
+        <p>Ilość: {{ ksiazka.ilosc }}</p>
+        <p>Cena: {{ ksiazka.cena }} PLN</p>
+        {% if ksiazka.okladka %}
+            <img src="{{ ksiazka.okladka }}" alt="{{ ksiazka.tytul }} Okładka">
+        {% else %}
+            <p>Brak obrazka</p>
+        {% endif %}
+        <form action="{% url 'zwieksz_ilosc' ksiazka.id %}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="Zwiększ ilość">
+        </form>
+        <form action="{% url 'zmniejsz_ilosc' ksiazka.id %}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="Zmniejsz ilość">
+        </form>
+                    <!-- Dodaj inne informacje o książce, które chcesz wyświetlić -->
+                </li>
+            {% endfor %}
+        </ul>
+        <p>Suma cen: {{ suma_cen }} PLN</p>
+    {% else %}
+        <p>Twój koszyk jest pusty.</p>
+    {% endif %}
+    <a href="{% url 'lista_ksiazek' %}">Wróć do listy książek</a>
+</body>
+</html>

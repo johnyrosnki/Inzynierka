@@ -14,6 +14,7 @@ class Ksiazka(models.Model):
     opis = models.TextField()
     okladka = models.ImageField(upload_to='okladki/', null=True, blank=True)
     kategorie = models.ManyToManyField(Kategoria)
+    cena = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
 
     def __str__(self):
         return self.tytul
@@ -44,4 +45,4 @@ def dodaj_do_koszyka(request, ksiazka_id):
 
 def wyswietl_koszyk(request):
     koszyk = request.session.get('koszyk', {})
-    return render(request, 'koszyk.html', {'koszyk': koszyk})
+    return render(request, 'wyswietl_koszyk.html', {'koszyk': koszyk})
