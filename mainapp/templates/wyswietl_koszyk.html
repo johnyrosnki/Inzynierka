@@ -1,11 +1,8 @@
 
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <title>Twój koszyk</title>
-</head>
-<body>
-     <h1>Twój koszyk</h1>
+{% extends 'base.html' %}
+
+{% block title %}Koszyk{% endblock %}
+{% block content %}
     {% if ksiazki_w_koszyku %}
         <ul>
             {% for ksiazka in ksiazki_w_koszyku %}
@@ -34,6 +31,4 @@
     {% else %}
         <p>Twój koszyk jest pusty.</p>
     {% endif %}
-    <a href="{% url 'lista_ksiazek' %}">Wróć do listy książek</a>
-</body>
-</html>
+{% endblock %}

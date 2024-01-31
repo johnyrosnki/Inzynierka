@@ -1,15 +1,13 @@
 <!-- templates/rejestracja.html -->
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <title>Rejestracja</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block title %}Rejestracja{% endblock %}
+
+{% block content %}
     <h2>Rejestracja</h2>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Zarejestruj się</button>
     </form>
-</body>
-</html>
+{% endblock %}

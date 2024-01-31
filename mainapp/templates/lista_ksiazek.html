@@ -1,16 +1,16 @@
+
 <!-- templates/lista_ksiazek.html -->
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <title>Lista Książek</title>
-    <!-- Dodaj Bootstrap z CDN -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block title %}Lista Książek{% endblock %}
+
+{% block content %}
+
     <div class="container">
         <h1>Lista Książek</h1>
         <div class="row">
             {% for ksiazka in ksiazki %}
+
                 <div class="col-md-3">
                     <div class="card mb-3">
                         <img src="{{ ksiazka.okladka.url }}" class="card-img-top" alt="{{ ksiazka.tytul }} Okładka">
@@ -24,13 +24,23 @@
                                 <p></p>
                             {% endfor %}
                         <p class="card-text">{{ ksiazka.cena }}</p>
+                        <p class="card-text">{{ ksiazka.data_utworzenia }}</p>
                         <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}">Dodaj do koszyka</a>
                         </div>
                     </div>
                 </div>
+                {% if ksiazka.slug %}
+                    <a href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}" class="btn btn-secondary">Szczegóły</a>
+               {% endif %}
             {% endfor %}
         </div>
     </div>
+
+
 <p><a href="{% url 'wyswietl_koszyk'%}">Koszyk</a></p>
-</body>
-</html>
+
+
+    </div>
+  </div>
+{% endblock %}
+

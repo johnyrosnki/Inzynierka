@@ -1,0 +1,53 @@
+<!-- templates/wyszukiwarka.html -->
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wyszukiwarka Książek</title>
+    <!-- Dodaj Bootstrap z CDN -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <h1>Wyszukiwarka Książek</h1>
+        <form>
+            <div class="form-group">
+                <label for="query">Szukaj:</label>
+                <input type="text" class="form-control" id="query" placeholder="Wpisz autora lub tytuł">
+            </div>
+            <div id="podpowiedzi" class="list-group">
+                <!-- Podpowiedzi będą tutaj -->
+            </div>
+        </form>
+    </div>
+
+    <!-- Dodaj jQuery z CDN -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha384-oaZR0x4xLUc56OGz9vHpgDsooLkcGLO8SII+M8hXzUXOvGJ/6MGuaA8Sl2bEj7xj" crossorigin="anonymous"></script>
+
+    <script>
+        // Obsługa podpowiedzi AJAX
+        $(document).ready(function () {
+            $('#query').on('input', function () {
+                let query = $(this).val();
+                if (query.length > 0) {
+                    $.ajax({
+                        url: '/podpowiedzi_wyszukiwarki/',
+                        data: { 'q': query },
+                        dataType: 'json',
+                        success: function (data) {
+                            $('#podpowiedzi').empty();
+                            data.wyniki.forEach(function (ksiazka) {
+                                $('#podpowiedzi').append('<a href="#" class="list-group-item list-group-item-action">' + ksiazka.autor + ' - ' + ksiazka.tytul + '</a>');
+                            });
+                        }
+                    });
+                } else {
+                    $('#podpowiedzi').empty();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

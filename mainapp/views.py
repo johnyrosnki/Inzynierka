@@ -1,5 +1,6 @@
 import json
 
+from django.db.models import Q
 from django.shortcuts import render
 
 # Create your views here.
@@ -14,10 +15,12 @@ from .forms import RejestracjaForm
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from decimal import Decimal
+from django.views import View
 import json
+from django.http import JsonResponse
 
-def index(request):
-    return HttpResponse("Witaj w aplikacji mainapp!")
+def base(request):
+    return render(request,'base.html')
 
 
 
@@ -143,6 +146,24 @@ def zmniejsz_ilosc(request, ksiazka_id):
 
     request.session['koszyk'] = koszyk
     return redirect('wyswietl_koszyk')
+
+
+class wyszukiwarka(View):
+    def get(self, request):
+        query = request.GET.get('q', '')
+        results = []
+
+        if query:
+            # Wyszukiwanie w bazie danych
+            results = Ksiazka.objects.filter(Q(tytul__icontains=query) | Q(autor__icontains=query))[:5]
+
+        # Formatuj wyniki jako listę słowników
+        results_data = [{'tytul': ksiazka.tytul, 'autor': ksiazka.autor} for ksiazka in results]
+
+        return JsonResponse({'results': results_data})
+def ksiazka_szczegoly(request, slug):
+    ksiazka = get_object_or_404(Ksiazka, slug=slug)
+    return render(request, 'ksiazka_szczegoly.html', {'ksiazka': ksiazka})
 
 
 
