@@ -33,67 +33,21 @@
         {% else %}
             <li class="nav-item"><a  class="nav-link" href="{% url 'logowanie' %}">Zaloguj</a></li>
             <li class="nav-item" ><a class="nav-link"  href="{% url 'rejestracja' %}">Zarejestruj się</a></li>
+
+        {% endif %}
+        {% if user.is_authenticated and user.is_staff %}
+            <a href="{% url 'admin:index' %}" class="btn btn-primary">Przejdź do panelu admina</a>
         {% endif %}
                 </ul>
             <form id="wyszukiwarka-form">
         <input type="text" id="wyszukiwarka-input" placeholder="Wyszukaj książki">
         <div id="wyszukiwarka-results"></div>
     </form>
-             <script>
-        $(document).ready(function () {
-            $('#wyszukiwarka-input').on('input', function () {
-                let query = $(this).val();
-                if (query.length > 2) {
-                    $.ajax({
-                        url: '/wyszukiwarka/',
-                        data: {q: query},
-                        success: function (data) {
-                            updateResults(data.results);
-                        }
-                    });
-                } else {
-                    clearResults();
-                }
-            });
-
-            function updateResults(results) {
-                let resultsContainer = $('#wyszukiwarka-results');
-                resultsContainer.empty();
-
-                if (results.length > 0) {
-                    resultsContainer.append('<p>Podpowiedzi:</p>');
-                    for (let result of results) {
-                        resultsContainer.append('<p>' + result.tytul + ' - ' + result.autor + '</p>');
-                    }
-                } else {
-                    resultsContainer.append('<p>Brak wyników</p>');
-                }
-            }
-
-            function clearResults() {
-                $('#wyszukiwarka-results').empty();
-            }
-        });
-    </script>
             </div>
         </nav>
     </header>
-
-    <main>
        {% block content %}
-  <div class="container">
-    <h1>{{ ksiazka.tytul }}</h1>
-    <p>Autor: {{ ksiazka.autor }}</p>
-    <p>Opis: {{ ksiazka.opis }}</p>
-    <p>Cena: {{ ksiazka.cena }}</p>
-    <p>Data dodania: {{ ksiazka.data_utworzenia }}</p>
 
-    <p>Kategorie: {% for kategoria in ksiazka.kategorie.all %}<a href="{% url 'ksiazki_wedlug_kategorii' kategoria.id %}">{{ kategoria.nazwa }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>
-
-    <img src="{{ ksiazka.okladka.url }}" alt="{{ ksiazka.tytul }} Okładka" class="img-fluid">
-
-    <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-primary">Dodaj do koszyka</a>
-  </div>
 {% endblock %}
     </main>
 

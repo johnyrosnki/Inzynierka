@@ -7,6 +7,7 @@ from django.dispatch import receiver
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.utils.text import slugify
+from django.db.models.signals import pre_save
 
 
 class Kategoria(models.Model):
@@ -21,13 +22,23 @@ class Ksiazka(models.Model):
     okladka = models.ImageField(upload_to='okladki/', null=True, blank=True)
     kategorie = models.ManyToManyField(Kategoria)
     cena = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
+    data_utworzenia = models.DateTimeField(default=timezone.now, verbose_name="Data utworzenia")
+    slug = models.SlugField(unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.tytul)
+        super().save(*args, **kwargs)
+
+
+@receiver(pre_save, sender=Ksiazka)
+def generate_slug(sender, instance, **kwargs):
+    if not instance.slug:
+        instance.slug = slugify(instance.tytul)
 
 
 
 
-
-    def __str__(self):
-        return self.tytul
 def lista_ksiazek(request):
 
     ksiazki = Ksiazka.objects.all()
@@ -61,6 +72,7 @@ class Zakladka(models.Model):
 
     ksiazka = models.ForeignKey(Ksiazka, on_delete=models.CASCADE)
     data_dodania = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False, default=1)
 
     def __str__(self):
         return f"{self.user.username} - {self.ksiazka.tytul}"

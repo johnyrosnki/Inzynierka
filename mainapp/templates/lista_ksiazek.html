@@ -28,10 +28,11 @@
                         <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}">Dodaj do koszyka</a>
                         </div>
                     </div>
-                </div>
                 {% if ksiazka.slug %}
                     <a href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}" class="btn btn-secondary">Szczegóły</a>
                {% endif %}
+                </div>
+
             {% endfor %}
         </div>
     </div>

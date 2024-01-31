@@ -1,8 +1,26 @@
 {% extends 'base.html' %}
 
+{% block title %}{{ ksiazka.tytul }}{% endblock %}
+
 {% block content %}
-  <div class="container">
-    <h1>{{ ksiazka.tytul }}</h1>
-    <!-- ... pozostała część kodu ... -->
-  </div>
+    <div class="row">
+        <div class="col-md-6">
+            <img src="{{ ksiazka.okladka.url }}" class="img-fluid" alt="{{ ksiazka.tytul }} Okładka">
+        </div>
+        <div class="col-md-6">
+            <h2>{{ ksiazka.tytul }}</h2>
+            <p>Autor: {{ ksiazka.autor }}</p>
+            <p>Kategorie:
+                {% for kategoria in ksiazka.kategorie.all %}
+                    <a href="{% url 'ksiazki_wedlug_kategorii' kategoria.id %}">{{ kategoria.nazwa }}</a>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </p>
+            <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-primary">Dodaj do koszyka</a>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <p>{{ ksiazka.opis }}</p>
+        </div>
+    </div>
 {% endblock %}
