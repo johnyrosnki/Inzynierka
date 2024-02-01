@@ -13,10 +13,16 @@
 
                 <div class="col-md-3">
                     <div class="card mb-3">
+                    {% if ksiazka.okladka %}
                         <img src="{{ ksiazka.okladka.url }}" class="card-img-top" alt="{{ ksiazka.tytul }} Okładka">
+                     {% else %}
+                    {% endif %}
                         <div class="card-body">
                             <h5 class="card-title">{{ ksiazka.tytul }}</h5>
-                            <p class="card-text">{{ ksiazka.autor }}</p>
+                            <p class="card-text">
+                                <a href="{% url 'ksiazki_wedlug_autora' ksiazka.autor.id %}">{{ ksiazka.autor.imie }} {{ ksiazka.autor.nazwisko }}</a>
+
+                            </p>
                             <p class="card-text">{{ ksiazka.opis }}</p>
 
                             <p class="card-text">Kategorie: {% for kategoria in ksiazka.kategorie.all %}<a href="{% url 'ksiazki_wedlug_kategorii' kategoria.id %}">{{ kategoria.nazwa }}</a>{% if not forloop.last %}, {% endif %}</p>

@@ -15,6 +15,7 @@
                     <a href="{% url 'ksiazki_wedlug_kategorii' kategoria.id %}">{{ kategoria.nazwa }}</a>{% if not forloop.last %}, {% endif %}
                 {% endfor %}
             </p>
+        <p>Cena: {{ ksiazka.cena }} zł</p>
             <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-primary">Dodaj do koszyka</a>
         </div>
     </div>

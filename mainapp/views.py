@@ -9,7 +9,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from PIL import Image, ImageOps
 from .forms import KsiazkaForm
-from .models import Ksiazka, Kategoria
+from .models import Ksiazka, Kategoria, Autor
 from django.shortcuts import render, get_object_or_404
 from .forms import RejestracjaForm
 from django.contrib.auth import authenticate, login
@@ -148,22 +148,14 @@ def zmniejsz_ilosc(request, ksiazka_id):
     return redirect('wyswietl_koszyk')
 
 
-class wyszukiwarka(View):
-    def get(self, request):
-        query = request.GET.get('q', '')
-        results = []
 
-        if query:
-            # Wyszukiwanie w bazie danych
-            results = Ksiazka.objects.filter(Q(tytul__icontains=query) | Q(autor__icontains=query))[:5]
-
-        # Formatuj wyniki jako listę słowników
-        results_data = [{'tytul': ksiazka.tytul, 'autor': ksiazka.autor} for ksiazka in results]
-
-        return JsonResponse({'results': results_data})
 def ksiazka_szczegoly(request, slug):
     ksiazka = get_object_or_404(Ksiazka, slug=slug)
     return render(request, 'ksiazka_szczegoly.html', {'ksiazka': ksiazka})
+def ksiazki_wedlug_autora(request, autor_id):
+    autor = get_object_or_404(Autor, id=autor_id)
+    ksiazki = Ksiazka.objects.filter(autor=autor)
+    return render(request, 'ksiazki_wedlug_autora.html', {'autor': autor, 'ksiazki': ksiazki})
 
 
 

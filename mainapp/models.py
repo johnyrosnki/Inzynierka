@@ -4,10 +4,13 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.utils.text import slugify
 from django.db.models.signals import pre_save
+from django.urls import reverse
+from django.views import View
 
 
 class Kategoria(models.Model):
@@ -15,9 +18,18 @@ class Kategoria(models.Model):
 
     def __str__(self):
         return self.nazwa
+class Autor(models.Model):
+    imie = models.CharField(max_length=100)
+    nazwisko = models.CharField(max_length=100)
+    def __str__(self):
+        return f"{self.imie} {self.nazwisko}"
+
+    def get_absolute_url(self):
+        return reverse('ksiazki_wedlug_autora', args=[str(self.id)])
+
 class Ksiazka(models.Model):
     tytul = models.CharField(max_length=200)
-    autor = models.CharField(max_length=100)
+    autor = models.ForeignKey(Autor, on_delete=models.CASCADE)
     opis = models.TextField()
     okladka = models.ImageField(upload_to='okladki/', null=True, blank=True)
     kategorie = models.ManyToManyField(Kategoria)
@@ -29,6 +41,9 @@ class Ksiazka(models.Model):
         if not self.slug:
             self.slug = slugify(self.tytul)
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('ksiazka_szczegoly', args=[str(self.id)])
 
 
 @receiver(pre_save, sender=Ksiazka)
@@ -83,3 +98,4 @@ def dodaj_zakladke_po_dodaniu_ksiazki(sender, instance, created, **kwargs):
     if created:
         # Jeśli nowa książka została utworzona, dodaj zakładkę
         Zakladka.objects.create( ksiazka=instance)
+
