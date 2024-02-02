@@ -8,7 +8,7 @@
 
     <!-- Dodaj Bootstrap z CDN -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
 
 </head>
 <body>
@@ -44,6 +44,12 @@
 
             </div>
         </nav>
+    <div>
+    <label for="searchInput">Wyszukaj:</label>
+    <input type="text" id="searchInput" placeholder="Tytuł książki lub imię i nazwisko autora">
+    <ul id="searchResults"></ul>
+</div>
+
     </header>
        {% block content %}
 
@@ -59,6 +65,65 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
+<script>
 
+$(document).ready(function() {
+    $("#searchInput").on("input", function() {
+        var query = $(this).val();
+        if (query.length >= 2) {
+            $.ajax({
+                type: 'GET',
+                url: '{% url "wyszukiwarka" %}',
+                data: {'query': query},
+                success: function(data) {
+                    displayResults(data);
+                },
+                error: function(error) {
+                    console.log('Wystąpił błąd:', error);
+                }
+            });
+        } else {
+            $("#searchResults").empty();
+        }
+    });
+
+    function displayResults(data) {
+        $("#searchResults").empty();
+        data.results.forEach(function(result) {
+            var listItem = $("<li>").text(result.label);
+            listItem.on("click", function() {
+                window.location.href = result.url;
+            });
+            $("#searchResults").append(listItem);
+        });
+    }
+});
+function obslugaPodpowiedzi() {
+    // Twoja istniejąca funkcja obsługująca podpowiedzi
+
+    // Dodaj obsługę zdarzenia kliknięcia na podpowiedzi
+    $('#id_podpowiedzi').on('click', 'li', function() {
+        var imie = $(this).data('imie'); // Pobierz ID autora z atrybutu data
+        var tytul = $(this).data('tytul'); // Pobierz ID tytułu z atrybutu data
+
+        // Sprawdź, czy istnieje ID autora lub ID tytułu
+        if (autorId !== undefined) {
+            // Przejdź do strony z listą książek danego autora
+            var url = '/ksiazki_wedlug_autora/' + imie + '/';
+            window.location.href = url;
+        } else if (tytulId !== undefined) {
+            // Przejdź do strony ze szczegółami danej książki
+            var url = '/ksiazka_szczegoly/' + tytul + '/';
+            window.location.href = url;
+        }
+    });
+}
+
+// Wywołanie funkcji
+obslugaPodpowiedzi();
+obslugaPodpowiedzi();
+</script>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 </body>
 </html>

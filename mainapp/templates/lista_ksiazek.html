@@ -3,6 +3,7 @@
 {% extends 'base.html' %}
 
 {% block title %}Lista Książek{% endblock %}
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 
 {% block content %}
 
@@ -20,7 +21,8 @@
                         <div class="card-body">
                             <h5 class="card-title">{{ ksiazka.tytul }}</h5>
                             <p class="card-text">
-                                <a href="{% url 'ksiazki_wedlug_autora' ksiazka.autor.id %}">{{ ksiazka.autor.imie }} {{ ksiazka.autor.nazwisko }}</a>
+
+
 
                             </p>
                             <p class="card-text">{{ ksiazka.opis }}</p>

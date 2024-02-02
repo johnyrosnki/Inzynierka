@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from .views import dodaj_ksiazke
-from .views import lista_ksiazek, ksiazki_wedlug_kategorii,dodaj_do_koszyka,wyswietl_koszyk,usun_z_koszyka,rejestracja,logowanie,zwieksz_ilosc,zmniejsz_ilosc, ksiazka_szczegoly
+from .views import lista_ksiazek, ksiazki_wedlug_kategorii,dodaj_do_koszyka,wyswietl_koszyk,usun_z_koszyka,rejestracja,logowanie,zwieksz_ilosc,zmniejsz_ilosc, ksiazka_szczegoly,WyszukiwarkaView,ksiazki_wedlug_autora
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth.views import LogoutView
@@ -21,7 +21,8 @@ urlpatterns = [
     path('zmniejsz_ilosc/<int:ksiazka_id>/', zmniejsz_ilosc, name='zmniejsz_ilosc'),
     path('wyloguj/', LogoutView.as_view(next_page='/'), name='wyloguj'),
     path('ksiazka_szczegoly/<slug:slug>/', ksiazka_szczegoly, name='ksiazka_szczegoly'),
-    path('ksiazki_wedlug_autora/<int:autor_id>/', views.ksiazki_wedlug_autora, name='ksiazki_wedlug_autora'),
+    path('ksiazki_wedlug_autora/<slug:slug>/', ksiazki_wedlug_autora, name='ksiazki_wedlug_autora'),
+    path('wyszukiwarka/', WyszukiwarkaView.as_view(), name='wyszukiwarka'),
 
 
 

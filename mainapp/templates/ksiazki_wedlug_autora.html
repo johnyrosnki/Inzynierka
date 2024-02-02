@@ -4,12 +4,13 @@
 
 {% block content %}
      <div class="container">
-        <h1>Książki w Kategorii: {{ kategoria.nazwa }}</h1>
+         <h1>Książki autora: {{ autor.imie }} {{ autor.nazwisko }}</h1>
+
         <div class="row">
             {% for ksiazka in ksiazki %}
                 <div class="col-md-3">
                     <div class="card mb-3">
-                   {% if ksiazka.okladka %}
+                    {% if ksiazka.okladka %}
                         <img src="{{ ksiazka.okladka.url }}" class="card-img-top" alt="{{ ksiazka.tytul }} Okładka">
                      {% else %}
                     {% endif %}
@@ -24,4 +25,5 @@
             {% endfor %}
         </div>
     </div>
+
 {% endblock %}

@@ -152,12 +152,30 @@ def zmniejsz_ilosc(request, ksiazka_id):
 def ksiazka_szczegoly(request, slug):
     ksiazka = get_object_or_404(Ksiazka, slug=slug)
     return render(request, 'ksiazka_szczegoly.html', {'ksiazka': ksiazka})
-def ksiazki_wedlug_autora(request, autor_id):
-    autor = get_object_or_404(Autor, id=autor_id)
-    ksiazki = Ksiazka.objects.filter(autor=autor)
-    return render(request, 'ksiazki_wedlug_autora.html', {'autor': autor, 'ksiazki': ksiazki})
+def ksiazki_wedlug_autora(request, slug):
+    autor = get_object_or_404(Autor, slug=slug)
+    ksiazki_autora = autor.ksiazka_set.all()
+    return render(request, 'ksiazki_wedlug_autora.html', {'autor': autor, 'ksiazki': ksiazki_autora})
 
 
+class WyszukiwarkaView(View):
+    def get(self, request, *args, **kwargs):
+        query = request.GET.get('query', '')
+        results = self.get_search_results(query)
+        return JsonResponse({'results': results})
+
+    def get_search_results(self, query):
+        ksiazki = Ksiazka.objects.filter(tytul__icontains=query)
+        autorzy = Autor.objects.filter(Q(imie__icontains=query) | Q(nazwisko__icontains=query))
+
+        results = []
+        for ksiazka in ksiazki:
+            results.append({'label': ksiazka.tytul, 'url': ksiazka.get_absolute_url()})
+
+        for autor in autorzy:
+            results.append({'label': str(autor), 'url': autor.get_absolute_url()})
+
+        return results
 
 
 

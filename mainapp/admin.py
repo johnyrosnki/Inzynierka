@@ -10,6 +10,7 @@ admin.site.register(Kategoria, KategoriaAdmin)
 class AutorAdmin(admin.ModelAdmin):
     list_display = ('imie', 'nazwisko')
     search_fields = ('imie','nazwisko')
+    exclude = ('slug',)
 
 
 admin.site.register(Autor,AutorAdmin)

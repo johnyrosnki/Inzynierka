@@ -1,8 +1,11 @@
 <!-- Wyszukiwarka -->
-<input type="text" id="searchInput" placeholder="Wyszukaj...">
-<ul id="searchResults"></ul>
+<div>
+    <label for="searchInput">Wyszukaj:</label>
+    <input type="text" id="searchInput" placeholder="Tytuł książki lub imię i nazwisko autora">
+    <ul id="searchResults"></ul>
+</div>
 
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
 <script>
 $(document).ready(function() {
     $("#searchInput").on("input", function() {
@@ -35,4 +38,26 @@ $(document).ready(function() {
         });
     }
 });
+function obslugaPodpowiedzi() {
+    // Twoja istniejąca funkcja obsługująca podpowiedzi
+
+    // Dodaj obsługę zdarzenia kliknięcia na podpowiedzi
+    $('#id_podpowiedzi').on('click', 'li', function() {
+        var autorId = $(this).data('autor-id'); // Pobierz ID autora z atrybutu data
+        var tytulId = $(this).data('tytul-id'); // Pobierz ID tytułu z atrybutu data
+
+        // Sprawdź, czy istnieją zarówno ID autora, jak i ID tytułu
+        if (autorId !== undefined && tytulId !== undefined) {
+            // Przejdź do odpowiedniego widoku lub strony, np.
+            var url = '/ksiazka_szczegoly/' + autorId + '/' + tytulId + '/'; // Przykład ścieżki URL
+            window.location.href = url;
+        }
+    });
+}
+
+
+
+</script>
+<script>
+
 </script>

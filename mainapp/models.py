@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django.db.models.signals import pre_save
 from django.urls import reverse
+from unidecode import unidecode
 from django.views import View
 
 
@@ -21,11 +22,18 @@ class Kategoria(models.Model):
 class Autor(models.Model):
     imie = models.CharField(max_length=100)
     nazwisko = models.CharField(max_length=100)
-    def __str__(self):
-        return f"{self.imie} {self.nazwisko}"
+    slug = models.SlugField(unique=True, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(f"{self.imie} {self.nazwisko}")
+        super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse('ksiazki_wedlug_autora', args=[str(self.id)])
+        return reverse('ksiazki_wedlug_autora', args=[self.slug])
+
+    def __str__(self):
+        return f"{self.imie} {self.nazwisko}"
 
 class Ksiazka(models.Model):
     tytul = models.CharField(max_length=200)
@@ -38,12 +46,13 @@ class Ksiazka(models.Model):
     slug = models.SlugField(unique=True, blank=True)
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.tytul)
+        self.slug = slugify(self.tytul)
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse('ksiazka_szczegoly', args=[str(self.id)])
+        # Użyj unidecode do zamiany polskich znaków na ich odpowiedniki bez diakrytyki
+        slug = unidecode(self.tytul)
+        return reverse('ksiazka_szczegoly', args=[str(self.slug)])
 
 
 @receiver(pre_save, sender=Ksiazka)
