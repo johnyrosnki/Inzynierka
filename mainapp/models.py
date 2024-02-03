@@ -34,6 +34,22 @@ class Autor(models.Model):
 
     def __str__(self):
         return f"{self.imie} {self.nazwisko}"
+class Wydawnictwo(models.Model):
+    nazwa = models.CharField(max_length=100)
+    opis = models.TextField()
+    slug = models.SlugField(unique=True, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+
+        self.slug = slugify(self.nazwa)
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('wydawnictwo_szczegoly', args=[self.slug])
+    def __str__(self):
+        return self.nazwa
+
+
 
 class Ksiazka(models.Model):
     tytul = models.CharField(max_length=200)
@@ -43,6 +59,7 @@ class Ksiazka(models.Model):
     kategorie = models.ManyToManyField(Kategoria)
     cena = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
     data_utworzenia = models.DateTimeField(default=timezone.now, verbose_name="Data utworzenia")
+    wydawnictwo = models.ForeignKey(Wydawnictwo, on_delete=models.CASCADE)
     slug = models.SlugField(unique=True, blank=True)
 
     def save(self, *args, **kwargs):
@@ -50,8 +67,7 @@ class Ksiazka(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        # Użyj unidecode do zamiany polskich znaków na ich odpowiedniki bez diakrytyki
-        slug = unidecode(self.tytul)
+
         return reverse('ksiazka_szczegoly', args=[str(self.slug)])
 
 

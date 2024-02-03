@@ -48,6 +48,7 @@
     <label for="searchInput">Wyszukaj:</label>
     <input type="text" id="searchInput" placeholder="Tytuł książki lub imię i nazwisko autora">
     <ul id="searchResults"></ul>
+
 </div>
 
     </header>
@@ -66,7 +67,6 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
 <script>
-
 $(document).ready(function() {
     $("#searchInput").on("input", function() {
         var query = $(this).val();
@@ -98,29 +98,35 @@ $(document).ready(function() {
         });
     }
 });
+
 function obslugaPodpowiedzi() {
     // Twoja istniejąca funkcja obsługująca podpowiedzi
 
     // Dodaj obsługę zdarzenia kliknięcia na podpowiedzi
     $('#id_podpowiedzi').on('click', 'li', function() {
-        var imie = $(this).data('imie'); // Pobierz ID autora z atrybutu data
-        var tytul = $(this).data('tytul'); // Pobierz ID tytułu z atrybutu data
+        var imie = $(this).data('imie');
+        var tytul = $(this).data('tytul');
+        var rodzaj = $(this).data('rodzaj');
+        var nazwa = $(this).data('nazwa');
 
-        // Sprawdź, czy istnieje ID autora lub ID tytułu
-        if (autorId !== undefined) {
+        if (rodzaj === 'autor') {
             // Przejdź do strony z listą książek danego autora
             var url = '/ksiazki_wedlug_autora/' + imie + '/';
             window.location.href = url;
-        } else if (tytulId !== undefined) {
+        } else if (rodzaj === 'tytul') {
             // Przejdź do strony ze szczegółami danej książki
             var url = '/ksiazka_szczegoly/' + tytul + '/';
+            window.location.href = url;
+        } else if (rodzaj === 'nazwa') {
+            // Przejdź do strony ze szczegółami danej książki
+            var url = '/wydawnictwo_szczegoly/' + nazwa + '/';
             window.location.href = url;
         }
     });
 }
 
 // Wywołanie funkcji
-obslugaPodpowiedzi();
+
 obslugaPodpowiedzi();
 </script>
 

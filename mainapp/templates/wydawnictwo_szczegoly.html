@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Książki autora: {{ wydawnictwo.nazwa }}{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Książki autora: {{ wydawnictwo.nazwa }}</h1>
+
+        <div class="row">
+            {% for ksiazka in wydawnictwo.ksiazki %}
+                <div class="col-md-3">
+                    <div class="card mb-3">
+                        {% if ksiazka.okladka %}
+                            <img src="{{ ksiazka.okladka.url }}" class="card-img-top" alt="{{ ksiazka.tytul }} Okładka">
+                        {% else %}
+                            <!-- Dodaj fallback lub inne działania w przypadku braku okładki -->
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ ksiazka.tytul }}</h5>
+                            <p class="card-text">{{ ksiazka.autor }}</p>
+                            <p class="card-text">{{ ksiazka.opis }}</p>
+                            <p class="card-text">Kategorie: {% for kategoria in ksiazka.kategorie.all %}{{ kategoria.nazwa }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

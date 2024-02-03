@@ -1,4 +1,3 @@
-
 <!-- templates/lista_ksiazek.html -->
 {% extends 'base.html' %}
 
@@ -11,45 +10,59 @@
         <h1>Lista Książek</h1>
         <div class="row">
             {% for ksiazka in ksiazki %}
+                  {% with autor=ksiazka.autor wydawnictwo=ksiazka.wydawnictwo%}
 
                 <div class="col-md-3">
                     <div class="card mb-3">
-                    {% if ksiazka.okladka %}
-                        <img src="{{ ksiazka.okladka.url }}" class="card-img-top" alt="{{ ksiazka.tytul }} Okładka">
-                     {% else %}
-                    {% endif %}
+                        {% if ksiazka.okladka %}
+                            <img src="{{ ksiazka.okladka.url }}" class="card-img-top" alt="{{ ksiazka.tytul }} Okładka">
+                        {% else %}
+                        {% endif %}
                         <div class="card-body">
                             <h5 class="card-title">{{ ksiazka.tytul }}</h5>
+                            <h5 class="card-title">{{ ksiazka.autor }}</h5>
                             <p class="card-text">
 
 
+                                    <a href="{% url 'ksiazki_wedlug_autora' slug=autor.slug %}">{{ autor.imie }} {{ autor.nazwisko }}</a>
 
                             </p>
                             <p class="card-text">{{ ksiazka.opis }}</p>
 
-                            <p class="card-text">Kategorie: {% for kategoria in ksiazka.kategorie.all %}<a href="{% url 'ksiazki_wedlug_kategorii' kategoria.id %}">{{ kategoria.nazwa }}</a>{% if not forloop.last %}, {% endif %}</p>
+                            <p class="card-text">Kategorie: {% for kategoria in ksiazka.kategorie.all %}
+                                <a href="{% url 'ksiazki_wedlug_kategorii' kategoria.id %}">{{ kategoria.nazwa }}</a>
+                                {% if not forloop.last %}, {% endif %}</p>
 
                                 <p></p>
                             {% endfor %}
-                        <p class="card-text">{{ ksiazka.cena }}</p>
-                        <p class="card-text">{{ ksiazka.data_utworzenia }}</p>
-                        <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}">Dodaj do koszyka</a>
+                            <p class="card-text">{{ ksiazka.cena }}</p>
+                            <p class="card-text">{{ ksiazka.data_utworzenia }}</p>
+                            <p class="card-text">
+                                <a href="
+                                       {% url 'wydawnictwo_szczegoly' slug=wydawnictwo.slug %}">{{ ksiazka.wydawnictwo }}
+                                </a>
+
+
+                            </p>
+
+                            <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}">Dodaj do koszyka</a>
                         </div>
                     </div>
-                {% if ksiazka.slug %}
-                    <a href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}" class="btn btn-secondary">Szczegóły</a>
-               {% endif %}
+                    {% if ksiazka.slug %}
+                        <a href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}"
+                           class="btn btn-secondary">Szczegóły</a>
+                    {% endif %}
                 </div>
-
+    {% endwith %}
             {% endfor %}
         </div>
     </div>
 
 
-<p><a href="{% url 'wyswietl_koszyk'%}">Koszyk</a></p>
+    <p><a href="{% url 'wyswietl_koszyk' %}">Koszyk</a></p>
 
 
     </div>
-  </div>
+    </div>
 {% endblock %}
 

@@ -9,7 +9,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from PIL import Image, ImageOps
 from .forms import KsiazkaForm
-from .models import Ksiazka, Kategoria, Autor
+from .models import Ksiazka, Kategoria, Autor, Wydawnictwo
 from django.shortcuts import render, get_object_or_404
 from .forms import RejestracjaForm
 from django.contrib.auth import authenticate, login
@@ -152,6 +152,9 @@ def zmniejsz_ilosc(request, ksiazka_id):
 def ksiazka_szczegoly(request, slug):
     ksiazka = get_object_or_404(Ksiazka, slug=slug)
     return render(request, 'ksiazka_szczegoly.html', {'ksiazka': ksiazka})
+def wydawnictwo_szczegoly(request, slug):
+    wydawnictwo = get_object_or_404(Wydawnictwo, slug=slug)
+    return render(request, 'wydawnictwo_szczegoly.html', {'wydawnictwo': wydawnictwo})
 def ksiazki_wedlug_autora(request, slug):
     autor = get_object_or_404(Autor, slug=slug)
     ksiazki_autora = autor.ksiazka_set.all()
@@ -167,15 +170,18 @@ class WyszukiwarkaView(View):
     def get_search_results(self, query):
         ksiazki = Ksiazka.objects.filter(tytul__icontains=query)
         autorzy = Autor.objects.filter(Q(imie__icontains=query) | Q(nazwisko__icontains=query))
+        wydawnictwa = Wydawnictwo.objects.filter(nazwa__icontains=query)
 
         results = []
         for ksiazka in ksiazki:
             results.append({'label': ksiazka.tytul, 'url': ksiazka.get_absolute_url()})
 
         for autor in autorzy:
-            results.append({'label': str(autor), 'url': autor.get_absolute_url()})
+            results.append({'label': autor.imie + ' ' + autor.nazwisko, 'url': autor.get_absolute_url()})
+
+        for wydawnictwo in wydawnictwa:
+            results.append({'label': wydawnictwo.nazwa, 'url': wydawnictwo.get_absolute_url()})
 
         return results
-
 
 
