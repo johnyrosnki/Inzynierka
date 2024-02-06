@@ -124,3 +124,13 @@ def dodaj_zakladke_po_dodaniu_ksiazki(sender, instance, created, **kwargs):
         # Jeśli nowa książka została utworzona, dodaj zakładkę
         Zakladka.objects.create( ksiazka=instance)
 
+class ZakupionaKsiazka(models.Model):
+    uzytkownik = models.ForeignKey(User, on_delete=models.CASCADE)
+    ksiazka = models.ForeignKey(Ksiazka, on_delete=models.CASCADE)
+    data_zakupu = models.DateTimeField(auto_now_add=True)
+
+class PrzegladanaKsiazka(models.Model):
+    uzytkownik = models.ForeignKey(User, on_delete=models.CASCADE)
+    ksiazka = models.ForeignKey(Ksiazka, on_delete=models.CASCADE)
+    data_przegladania = models.DateTimeField(auto_now_add=True)
+

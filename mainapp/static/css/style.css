@@ -7,7 +7,7 @@ p {
 }
 
 #content {
-    margin: 20px 60px 100px 60px;
+    margin: 20px 30px 100px 30px;
 }
 
 footer {
@@ -86,12 +86,15 @@ header {
     z-index: 999;
     width: 50% !important;
     background: olive;
+    cursor: pointer;
+    border-radius: 10px;
 }
 
 
 #searchResults li {
     padding: 10px;
     color: white;
+    cursor: pointer;
 
 
 }
@@ -99,7 +102,8 @@ header {
 #searchResults li:hover {
     color: #808000;
     background: white;
-    border-radius: 10px;
+
+    cursor: pointer;
 }
 
 .info-koszyk {
@@ -118,7 +122,35 @@ h1, h2, h3, h4, h5 p {
 .card-img-top {
     max-width: 200px;
     height: auto;
+    border-radius: 10px 10px 0px 0px !important;
 }
-.tytul{font-size: 20px;
-color: #0a0a5c;
+
+.tytul {
+    font-size: 20px;
+    color: #0a0a5c;
 }
+
+.card-body {
+    padding: 10px !important;
+    background: #0a0a5c;
+    border-radius:  0px 0px 10px 10px;
+}
+.card-body a{color: #ffffff;}
+
+@media (min-width: 1200px) {
+    .container {
+        max-width: 90% !important;
+    }
+}
+
+.card {
+    border-radius: 20px !important;
+}
+.cena {
+    text-align: center;
+    font-weight: bold;
+    font-size: 20px;
+    color:#fff;
+}
+.przycisk-koszyk{text-align: center;}
+.przycisk-koszyk a:hover{color:#0a0a5c !important;}
