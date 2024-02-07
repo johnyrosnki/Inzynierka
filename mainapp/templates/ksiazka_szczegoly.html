@@ -12,7 +12,8 @@
             <p>Autor: {{ ksiazka.autor }}</p>
             <p>Kategorie:
                 {% for kategoria in ksiazka.kategorie.all %}
-                    <a href="{% url 'ksiazki_wedlug_kategorii' kategoria.id %}">{{ kategoria.nazwa }}</a>{% if not forloop.last %}, {% endif %}
+
+                    <a href="{% url 'ksiazki_wedlug_kategorii' slug=kategoria.slug %}">{{ kategoria.nazwa }}</a>{% if not forloop.last %}, {% endif %}
                 {% endfor %}
             </p>
         <p>Cena: {{ ksiazka.cena }} zł</p>

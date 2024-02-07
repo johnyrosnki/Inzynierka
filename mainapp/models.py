@@ -16,6 +16,14 @@ from django.views import View
 
 class Kategoria(models.Model):
     nazwa = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=True, null=True)
+    def save(self, *args, **kwargs):
+
+        self.slug = slugify(self.nazwa)
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('ksiazki_wedlug_kategorii', args=[self.slug])
 
     def __str__(self):
         return self.nazwa

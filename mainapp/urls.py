@@ -4,13 +4,14 @@ from .views import dodaj_ksiazke
 from .views import lista_ksiazek, ksiazki_wedlug_kategorii, dodaj_do_koszyka, wyswietl_koszyk, usun_z_koszyka, \
     rejestracja, logowanie, zwieksz_ilosc, zmniejsz_ilosc, ksiazka_szczegoly, WyszukiwarkaView, ksiazki_wedlug_autora, \
     wydawnictwo_szczegoly
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
                   path('', views.base, name='base'),
-                  path('ksiazki_wedlug_kategorii/<int:kategoria_id>/', ksiazki_wedlug_kategorii,
+                  path('ksiazki_wedlug_kategorii/<slug:slug>/', ksiazki_wedlug_kategorii,
                        name='ksiazki_wedlug_kategorii'),
                   path('lista_ksiazek/', lista_ksiazek, name='lista_ksiazek'),
                   path('dodaj_do_koszyka/<int:ksiazka_id>/', dodaj_do_koszyka, name='dodaj_do_koszyka'),
@@ -25,5 +26,6 @@ urlpatterns = [
                   path('ksiazki_wedlug_autora/<slug:slug>/', ksiazki_wedlug_autora, name='ksiazki_wedlug_autora'),
                   path('wydawnictwo_szczegoly/<slug:slug>/', wydawnictwo_szczegoly, name='wydawnictwo_szczegoly'),
                   path('wyszukiwarka/', WyszukiwarkaView.as_view(), name='wyszukiwarka'),
+                  # path('platnosc/', views.platnosc, name='platnosc'),  # Dodaj tę linijkę
 
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

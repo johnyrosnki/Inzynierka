@@ -1,5 +1,6 @@
 import json
 
+import stripe
 from django.db.models import Q
 from django.shortcuts import render
 
@@ -18,6 +19,7 @@ from decimal import Decimal
 from django.views import View
 import json
 from django.http import JsonResponse
+from django.conf import settings
 
 def base(request):
     return render(request,'base.html')
@@ -45,10 +47,7 @@ def lista_ksiazek(request):
                 img_resized.save(image_path)
     return render(request, 'lista_ksiazek.html', {'ksiazki': ksiazki})
 
-def ksiazki_wedlug_kategorii(request, kategoria_id):
-    kategoria = get_object_or_404(Kategoria, id=kategoria_id)
-    ksiazki = Ksiazka.objects.filter(kategorie=kategoria)
-    return render(request, 'ksiazki_wedlug_kategorii.html', {'kategoria': kategoria, 'ksiazki': ksiazki})
+
 
 def dodaj_do_koszyka(request, ksiazka_id):
     ksiazka = Ksiazka.objects.get(pk=ksiazka_id)
@@ -159,6 +158,10 @@ def ksiazki_wedlug_autora(request, slug):
     autor = get_object_or_404(Autor, slug=slug)
     ksiazki_autora = autor.ksiazka_set.all()
     return render(request, 'ksiazki_wedlug_autora.html', {'autor': autor, 'ksiazki': ksiazki_autora})
+def ksiazki_wedlug_kategorii(request, slug):
+    kategoria = get_object_or_404(Kategoria, slug=slug)
+    ksiazki = Ksiazka.objects.filter(kategorie=kategoria)
+    return render(request, 'ksiazki_wedlug_kategorii.html', {'kategoria': kategoria, 'ksiazki': ksiazki})
 
 
 class WyszukiwarkaView(View):
@@ -183,5 +186,38 @@ class WyszukiwarkaView(View):
             results.append({'label': wydawnictwo.nazwa, 'url': wydawnictwo.get_absolute_url()})
 
         return results
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+# def platnosc(request):
+#     if request.method == 'POST':
+#         # Pobranie danych o płatności z formularza
+#         token = request.POST.get('stripeToken')
+#         kwota = request.POST.get('kwota')
+#
+#         try:
+#             # Wykonanie płatności za pomocą tokenu karty
+#             platnosc = stripe.Charge.create(
+#                 amount=int(kwota) * 100,  # Kwota w groszach
+#                 currency='PLN',
+#                 description='Opis płatności',
+#                 source=token,
+#             )
+#
+#             # Tutaj możesz dodać kod obsługi udanej płatności, np. zapisanie danych do bazy danych
+#
+#             # Zwróć odpowiedź JSON informującą o sukcesie płatności
+#             return JsonResponse({'success': True})
+#
+#         except stripe.error.CardError as e:
+#             # Błąd karty - przekazanie komunikatu błędu do szablonu
+#             return JsonResponse({'error': e.error.message})
+#
+#         except Exception as e:
+#             # Ogólny błąd płatności
+#             return JsonResponse({'error': str(e)})
+#
+#     else:
+#         # Renderowanie szablonu HTML z formularzem płatności
+#         return render(request, 'płatnosc.html')
 
 
