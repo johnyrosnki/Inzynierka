@@ -3,7 +3,7 @@ from . import views
 from .views import dodaj_ksiazke
 from .views import lista_ksiazek, ksiazki_wedlug_kategorii, dodaj_do_koszyka, wyswietl_koszyk, usun_z_koszyka, \
     rejestracja, logowanie, zwieksz_ilosc, zmniejsz_ilosc, ksiazka_szczegoly, WyszukiwarkaView, ksiazki_wedlug_autora, \
-    wydawnictwo_szczegoly
+    wydawnictwo_szczegoly, platnosc,inicjuj_platnosc,procesuj_platnosc,potwierdzenie_platnosci,dodaj_dane_platnosci
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -26,6 +26,12 @@ urlpatterns = [
                   path('ksiazki_wedlug_autora/<slug:slug>/', ksiazki_wedlug_autora, name='ksiazki_wedlug_autora'),
                   path('wydawnictwo_szczegoly/<slug:slug>/', wydawnictwo_szczegoly, name='wydawnictwo_szczegoly'),
                   path('wyszukiwarka/', WyszukiwarkaView.as_view(), name='wyszukiwarka'),
-                  # path('platnosc/', views.platnosc, name='platnosc'),  # Dodaj tę linijkę
+                 path('platnosc/', views.platnosc, name='platnosc'),  # Dodaj tę linijkę
+                  path('inicjuj_platnosc/', views.inicjuj_platnosc, name='inicjuj_platnosc'),
+                path('procesuj_platnosc/', procesuj_platnosc, name='procesuj_platnosc'),
+                path('potwierdzenie_platnosci/', potwierdzenie_platnosci, name='potwierdzenie_platnosci'),
+                  path('formularz_platnosci/', dodaj_dane_platnosci, name='formularz_platnosci'),
+
+
 
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

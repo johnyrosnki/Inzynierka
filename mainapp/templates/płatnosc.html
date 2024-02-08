@@ -1,67 +1,19 @@
-<!-- płatność.html -->
 <!DOCTYPE html>
-<html lang="pl">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formularz płatności</title>
+    <title>Płatność Stripe</title>
     <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
-    <h1>Formularz płatności</h1>
-    <form id="payment-form" action="{% url 'platnosc' %}" method="post">
-        {% csrf_token %}
-        <label for="kwota">Kwota (PLN):</label>
-        <input type="text" id="kwota" name="kwota" required>
+<div id="card-element">
+    <!-- Element Stripe zostanie wstawiony tutaj. -->
+</div>
 
-        <label for="card-element">
-          Karta kredytowa lub debetowa
-        </label>
-        <div id="card-element">
-          <!-- Twój formularz elementu karty Stripe -->
-        </div>
+<!-- Miejsce na wyświetlanie błędów Elementów Stripe -->
+<div id="card-errors" role="alert"></div>
 
-        <!-- Wyświetlanie ewentualnych błędów -->
-        <div id="card-errors" role="alert"></div>
+<button id="submit-button">Zapłać</button>
 
-        <button id="submit-button">Zapłać</button>
-    </form>
 
-{#    <script>#}
-{#        var stripe = Stripe('{{ STRIPE_PUBLISHABLE_KEY }}');#}
-{#        var elements = stripe.elements();#}
-{#        var cardElement = elements.create('card');#}
-{#        cardElement.mount('#card-element');#}
-{##}
-{#        var form = document.getElementById('payment-form');#}
-{##}
-{#        form.addEventListener('submit', function(event) {#}
-{#          event.preventDefault();#}
-{##}
-{#          stripe.createToken(cardElement).then(function(result) {#}
-{#            if (result.error) {#}
-{#              // Wyświetlenie błędu w polu card-errors#}
-{#              var errorElement = document.getElementById('card-errors');#}
-{#              errorElement.textContent = result.error.message;#}
-{#            } else {#}
-{#              // Utworzenie tokena, dodanie do formularza i wysłanie formularza#}
-{#              var tokenInput = document.createElement('input');#}
-{#              tokenInput.setAttribute('type', 'hidden');#}
-{#              tokenInput.setAttribute('name', 'stripeToken');#}
-{#              tokenInput.setAttribute('value', result.token.id);#}
-{#              form.appendChild(tokenInput);#}
-{#              form.submit();#}
-{#            }#}
-{#          });#}
-{#        });#}
-{#    </script>#}
-
-{#    <script src="https://checkout.stripe.com/checkout.js" class="stripe-button"#}
-{#    data-key="{{ key }}"#}
-{#    data-destription ="Payment Gateway"#}
-{#    data-amount="500"#}
-{#    data-locale="auto">#}
-{##}
-{#    </script>#}
 </body>
 </html>

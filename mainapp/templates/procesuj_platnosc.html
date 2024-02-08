@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Płatność</title>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+
+<form id="payment-form" method="post" action="/procesuj_platnosc/">
+    <!-- Kontener na Elementy Stripe -->
+    <div id="card-element">
+        <!-- Element Stripe zostanie wstawiony tutaj. -->
+    </div>
+
+    <!-- Miejsce na wyświetlanie błędów Elementów Stripe -->
+    <div id="card-errors" role="alert"></div>
+
+
+    <button type="submit" id="submit-button">Zapłać</button>
+</form>
+
+<script>
+    // Twój klucz publiczny Stripe
+    var stripe = Stripe('pk_test_51OhFR8Dj1H2ahXE3QT5PaRIvmSdvL2hRrHE8rTCnbPx0qldfD8bA0GIkbBcwJztdsO0S5cHdoIlZtCva9CGrCTPu00BJCKmtWu');
+
+    // Utworzenie instancji Elements
+    var elements = stripe.elements();
+
+    // Stylizacja Elementów Stripe
+    var style = {
+        base: {
+            // Stylizacja podstawowa
+        },
+        invalid: {
+            // Stylizacja dla danych wprowadzonych niepoprawnie
+        }
+    };
+
+    // Utworzenie Elementu karty
+    var card = elements.create('card', {style: style});
+
+    // Dołączenie Elementu karty do kontenera w DOM
+    card.mount('#card-element');
+
+    // Obsługa błędów podczas wpisywania danych karty
+    card.on('change', function (event) {
+        var displayError = document.getElementById('card-errors');
+        if (event.error) {
+            displayError.textContent = event.error.message;
+        } else {
+            displayError.textContent = '';
+        }
+    });
+
+    // Obsługa formularza płatności
+    var form = document.getElementById('payment-form');
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        stripe.createToken(card).then(function (result) {
+            if (result.error) {
+                // Wyświetlenie błędu, jeśli wystąpi
+                var errorElement = document.getElementById('card-errors');
+                errorElement.textContent = result.error.message;
+            } else {
+                // Wysłanie tokenu do serwera
+                stripeTokenHandler(result.token);
+            }
+        });
+    });
+
+    function stripeTokenHandler(token) {
+        // Wstawienie tokenu do formularza, aby został wysłany na serwer
+        var hiddenInput = document.createElement('input');
+        hiddenInput.setAttribute('type', 'hidden');
+        hiddenInput.setAttribute('name', 'stripeToken');
+        hiddenInput.setAttribute('value', token.id);
+        form.appendChild(hiddenInput);
+
+        // Wysłanie formularza
+        form.submit();
+    }
+</script>
+</body>
+</html>

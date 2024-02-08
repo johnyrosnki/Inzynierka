@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 
 {% block title %}Koszyk{% endblock %}
@@ -8,21 +7,21 @@
             {% for ksiazka in ksiazki_w_koszyku %}
                 <li>
                     <h2>{{ ksiazka.tytul }}</h2>
-        <p>Ilość: {{ ksiazka.ilosc }}</p>
-        <p>Cena: {{ ksiazka.cena }} PLN</p>
-        {% if ksiazka.okladka %}
-            <img src="{{ ksiazka.okladka }}" alt="{{ ksiazka.tytul }} Okładka">
-        {% else %}
-            <p>Brak obrazka</p>
-        {% endif %}
-        <form action="{% url 'zwieksz_ilosc' ksiazka.id %}" method="post">
-            {% csrf_token %}
-            <input type="submit" value="Zwiększ ilość">
-        </form>
-        <form action="{% url 'zmniejsz_ilosc' ksiazka.id %}" method="post">
-            {% csrf_token %}
-            <input type="submit" value="Zmniejsz ilość">
-        </form>
+                    <p>Ilość: {{ ksiazka.ilosc }}</p>
+                    <p>Cena: {{ ksiazka.cena }} PLN</p>
+                    {% if ksiazka.okladka %}
+                        <img src="{{ ksiazka.okladka }}" alt="{{ ksiazka.tytul }} Okładka">
+                    {% else %}
+                        <p>Brak obrazka</p>
+                    {% endif %}
+                    <form action="{% url 'zwieksz_ilosc' ksiazka.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="submit" value="Zwiększ ilość">
+                    </form>
+                    <form action="{% url 'zmniejsz_ilosc' ksiazka.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="submit" value="Zmniejsz ilość">
+                    </form>
                     <!-- Dodaj inne informacje o książce, które chcesz wyświetlić -->
                 </li>
             {% endfor %}
@@ -31,4 +30,32 @@
     {% else %}
         <p>Twój koszyk jest pusty.</p>
     {% endif %}
+
+    <button id="pay-button">Przejdź do płatności</button>
+
+<script>
+document.getElementById('pay-button').addEventListener('click', function() {
+    fetch('/inicjuj_platnosc/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'  // Upewnij się, że CSRF token jest dostarczony, jeśli używasz Django template.
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.clientSecret) {
+            // Tutaj możesz dodać obsługę płatności za pomocą Stripe.js
+            console.log('Client Secret received:', data.clientSecret);
+        } else {
+            console.error('Problem with creating payment intent.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
+</script>
+    <a href="{% url 'inicjuj_platnosc' %}"
+                               class="btn btn-secondary">Płatność</a>
 {% endblock %}

@@ -6,9 +6,12 @@ from django.shortcuts import render
 
 # Create your views here.
 from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpRequest
 from django.shortcuts import render, redirect
 from PIL import Image, ImageOps
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+
 from .forms import KsiazkaForm
 from .models import Ksiazka, Kategoria, Autor, Wydawnictwo
 from django.shortcuts import render, get_object_or_404
@@ -188,36 +191,99 @@ class WyszukiwarkaView(View):
         return results
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-# def platnosc(request):
-#     if request.method == 'POST':
-#         # Pobranie danych o płatności z formularza
-#         token = request.POST.get('stripeToken')
-#         kwota = request.POST.get('kwota')
-#
-#         try:
-#             # Wykonanie płatności za pomocą tokenu karty
-#             platnosc = stripe.Charge.create(
-#                 amount=int(kwota) * 100,  # Kwota w groszach
-#                 currency='PLN',
-#                 description='Opis płatności',
-#                 source=token,
-#             )
-#
-#             # Tutaj możesz dodać kod obsługi udanej płatności, np. zapisanie danych do bazy danych
-#
-#             # Zwróć odpowiedź JSON informującą o sukcesie płatności
-#             return JsonResponse({'success': True})
-#
-#         except stripe.error.CardError as e:
-#             # Błąd karty - przekazanie komunikatu błędu do szablonu
-#             return JsonResponse({'error': e.error.message})
-#
-#         except Exception as e:
-#             # Ogólny błąd płatności
-#             return JsonResponse({'error': str(e)})
-#
-#     else:
-#         # Renderowanie szablonu HTML z formularzem płatności
-#         return render(request, 'płatnosc.html')
+def platnosc(request):
+    try:
+        payment_intent = stripe.PaymentIntent.create(
+            amount=1000,  # Kwota w najmniejszej walucie, np. centach dla USD
+            currency='pln',
+            metadata={'integration_check': 'accept_a_payment'},
+        )
+        return JsonResponse({
+            'clientSecret': payment_intent['client_secret']
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=403)
+
+
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+def inicjuj_platnosc(request):
+    try:
+        koszyk = request.session.get('koszyk', {})
+        suma_cen = Decimal(0.0)
+
+        # Obliczanie sumy cen na podstawie koszyka
+        for ksiazka_id, ksiazka_info in koszyk.items():
+            suma_cen += Decimal(ksiazka_info['ilosc']) * Decimal(ksiazka_info['cena'])
+
+        # Tworzenie PaymentIntent z obliczoną sumą cen
+        payment_intent = stripe.PaymentIntent.create(
+            amount=int(suma_cen * 100),  # Kwota musi być w centach
+            currency='pln',
+        )
+
+        return JsonResponse({'clientSecret': payment_intent.client_secret})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=403)
+
+
+def procesuj_platnosc(request):
+    if request.method == "POST":
+        try:
+            # Pobieranie tokenu Stripe przesłanego z formularza
+            token = request.POST.get("stripeToken")
+
+            # Pobieranie sumy cen z sesji lub obliczanie jej na podstawie koszyka
+            koszyk = request.session.get('koszyk', {})
+            suma_cen = 0
+            for ksiazka_id, ksiazka_info in koszyk.items():
+                suma_cen += ksiazka_info['ilosc'] * ksiazka_info['cena']
+
+            # Dokonanie płatności
+            charge = stripe.Charge.create(
+                amount=int(suma_cen * 100),  # Kwota w centach
+                currency="pln",
+                description="Opis płatności",
+                source=token,
+            )
+
+            # Tutaj możesz dodać logikę po pomyślnej płatności, np. wysyłanie potwierdzenia e-mail
+
+            return redirect('sukces_platnosci')  # Przekieruj do strony potwierdzającej płatność
+        except stripe.error.StripeError as e:
+            # Obsługa błędów płatności Stripe
+            return JsonResponse({'error': str(e)}, status=403)
+    else:
+        return JsonResponse({"error": "Request method not allowed"}, status=405)
+
+
+def potwierdzenie_platnosci(request):
+    return render(request, 'potwierdzenie_platnosci.html')  # Strona potwierdzająca pomyślną płatność
+stripe.api_key = 'sk_test_51OhFR8Dj1H2ahXE3Ltfa0CD355C5Os1Wk05c4wohsNEPgKZ45OqRjN1aPlaOz61CwcD9UwAAbC0DGcpgNACZ6Q5400DdnP9uZI'
+
+def dodaj_dane_platnosci(request: HttpRequest):
+    if request.method == 'POST':
+        token = request.POST.get('stripeToken')
+
+        try:
+            # Tu możesz dodać logikę przetwarzania płatności z użyciem tokenu, np.:
+            charge = stripe.Charge.create(
+                amount=1000,  # Kwota w centach
+                currency='pln',
+                description='Opis transakcji',
+                source=token,  # Użycie tokenu jako źródła płatności
+            )
+
+            # Przekierowanie po pomyślnej płatności lub renderowanie szablonu z potwierdzeniem
+            return redirect('/potwierdz_platnosc/')
+
+        except stripe.error.StripeError as e:
+            # Obsługa błędów Stripe
+            body = e.json_body
+            err  = body.get('error', {})
+            return render(request, 'formularz_platnosci.html', {'error': err.get('message')})
+
+    # Dla GET, wyświetl formularz
+    return render(request, 'formularz_platnosci.html')
 
 
