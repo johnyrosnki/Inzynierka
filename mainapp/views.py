@@ -1,6 +1,7 @@
 import json
 
 import stripe
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import render
 
@@ -12,7 +13,7 @@ from PIL import Image, ImageOps
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from .forms import KsiazkaForm
+from .forms import KsiazkaForm, UserEditForm, ProfilUzytkownikaForm
 from .models import Ksiazka, Kategoria, Autor, Wydawnictwo
 from django.shortcuts import render, get_object_or_404
 from .forms import RejestracjaForm
@@ -84,6 +85,7 @@ def usun_z_koszyka(request, ksiazka_id):
         request.session['koszyk'] = koszyk
 
     return redirect('wyswietl_koszyk')
+
 
 def wyswietl_koszyk(request):
     koszyk = request.session.get('koszyk', {})
@@ -191,19 +193,6 @@ class WyszukiwarkaView(View):
         return results
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-def platnosc(request):
-    try:
-        payment_intent = stripe.PaymentIntent.create(
-            amount=1000,  # Kwota w najmniejszej walucie, np. centach dla USD
-            currency='pln',
-            metadata={'integration_check': 'accept_a_payment'},
-        )
-        return JsonResponse({
-            'clientSecret': payment_intent['client_secret']
-        })
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=403)
-
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -285,5 +274,42 @@ def dodaj_dane_platnosci(request: HttpRequest):
 
     # Dla GET, wyświetl formularz
     return render(request, 'formularz_platnosci.html')
+
+@csrf_exempt
+def zrealizuj_platnosc(request):
+    if request.method == 'POST':
+        token = request.POST.get('stripeToken')
+
+        try:
+            # Utworzenie opłaty
+            charge = stripe.Charge.create(
+                amount=1000,  # Kwota w centach
+                currency='pln',
+                description='Opis płatności',
+                source=token,  # Użycie tokenu płatności otrzymanego z formularza
+            )
+
+            return JsonResponse({'status': 'success', 'message': 'Płatność zrealizowana pomyślnie.'})
+        except stripe.error.StripeError as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'Nieprawidłowe żądanie'}, status=400)
+
+@login_required
+def profil_uzytkownika(request):
+    if request.method == 'POST':
+        user_form = UserEditForm(request.POST, instance=request.user)
+        profil_form = ProfilUzytkownikaForm(request.POST, instance=request.user.profiluzytkownika)
+        if user_form.is_valid() and profil_form.is_valid():
+            user_form.save()
+            profil_form.save()
+            return redirect('profil_uzytkownika')
+    else:
+        user_form = UserEditForm(instance=request.user)
+        profil_form = ProfilUzytkownikaForm(instance=request.user.profiluzytkownika)
+    return render(request, 'profil_uzytkownika.html', {
+        'user_form': user_form,
+        'profil_form': profil_form
+    })
 
 

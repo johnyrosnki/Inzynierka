@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django.db.models.signals import pre_save
 from django.urls import reverse
+from django.conf import settings
 from unidecode import unidecode
 from django.views import View
 
@@ -142,3 +143,12 @@ class PrzegladanaKsiazka(models.Model):
     ksiazka = models.ForeignKey(Ksiazka, on_delete=models.CASCADE)
     data_przegladania = models.DateTimeField(auto_now_add=True)
 
+class ProfilUzytkownika(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    adres = models.CharField(max_length=255, blank=True)
+    kod_pocztowy = models.CharField(max_length=10, blank=True)
+    miasto = models.CharField(max_length=100, blank=True)
+    wojewodztwo = models.CharField(max_length=100, blank=True)
+
+    def __str__(self):
+        return self.user.username

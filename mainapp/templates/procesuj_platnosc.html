@@ -1,50 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Płatność</title>
+    <title>Formularz płatności</title>
+    <!-- Stripe.js -->
     <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        /* Styl dla elementów Stripe */
+        .StripeElement {
+            box-sizing: border-box;
+            height: 40px;
+            padding: 10px 12px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            background-color: white;
+            box-shadow: 0 1px 3px 0 #e6ebf1;
+            -webkit-transition: box-shadow 150ms ease;
+            transition: box-shadow 150ms ease;
+        }
+
+        .StripeElement--focus {
+            box-shadow: 0 1px 3px 0 #cfd7df;
+        }
+
+        .StripeElement--invalid {
+            border-color: #fa755a;
+        }
+
+        .StripeElement--webkit-autofill {
+            background-color: #fefde5 !important;
+        }
+    </style>
 </head>
 <body>
 
-<form id="payment-form" method="post" action="/procesuj_platnosc/">
-    <!-- Kontener na Elementy Stripe -->
+<h2>Formularz płatności</h2>
+
+<!-- Formularz, w którym nie ma pól dotyczących danych karty -->
+<form id="payment-form">
     <div id="card-element">
-        <!-- Element Stripe zostanie wstawiony tutaj. -->
+      <!-- Elementy Stripe zostaną wstawione tutaj -->
     </div>
 
-    <!-- Miejsce na wyświetlanie błędów Elementów Stripe -->
+    <!-- Używamy tego elementu do wyświetlania błędów dotyczących elementów Stripe -->
     <div id="card-errors" role="alert"></div>
 
-
-    <button type="submit" id="submit-button">Zapłać</button>
+    <button id="submit">Zapłać</button>
 </form>
 
 <script>
-    // Twój klucz publiczny Stripe
-    var stripe = Stripe('pk_test_51OhFR8Dj1H2ahXE3QT5PaRIvmSdvL2hRrHE8rTCnbPx0qldfD8bA0GIkbBcwJztdsO0S5cHdoIlZtCva9CGrCTPu00BJCKmtWu');
-
-    // Utworzenie instancji Elements
+    // Inicjalizacja Stripe.js z twoim kluczem publicznym
+    var stripe = Stripe('twoj_klucz_publiczny_stripe');
     var elements = stripe.elements();
 
-    // Stylizacja Elementów Stripe
+    // Styl dla elementów Stripe
     var style = {
         base: {
-            // Stylizacja podstawowa
-        },
-        invalid: {
-            // Stylizacja dla danych wprowadzonych niepoprawnie
+            color: "#32325d",
         }
     };
 
-    // Utworzenie Elementu karty
-    var card = elements.create('card', {style: style});
-
-    // Dołączenie Elementu karty do kontenera w DOM
-    card.mount('#card-element');
+    // Tworzenie instancji elementu karty
+    var card = elements.create("card", { style: style });
+    card.mount("#card-element");
 
     // Obsługa błędów podczas wpisywania danych karty
-    card.on('change', function (event) {
+    card.on('change', function(event) {
         var displayError = document.getElementById('card-errors');
         if (event.error) {
             displayError.textContent = event.error.message;
@@ -53,34 +74,36 @@
         }
     });
 
-    // Obsługa formularza płatności
+    // Obsługa formularza
     var form = document.getElementById('payment-form');
-    form.addEventListener('submit', function (event) {
+    form.addEventListener('submit', function(event) {
         event.preventDefault();
 
-        stripe.createToken(card).then(function (result) {
+        stripe.createToken(card).then(function(result) {
             if (result.error) {
-                // Wyświetlenie błędu, jeśli wystąpi
+                // Informacja o błędzie
                 var errorElement = document.getElementById('card-errors');
                 errorElement.textContent = result.error.message;
             } else {
-                // Wysłanie tokenu do serwera
+                // Przesyłamy token do serwera
                 stripeTokenHandler(result.token);
             }
         });
     });
 
+    // Przekazanie tokenu do serwera
     function stripeTokenHandler(token) {
-        // Wstawienie tokenu do formularza, aby został wysłany na serwer
+        var form = document.getElementById('payment-form');
         var hiddenInput = document.createElement('input');
         hiddenInput.setAttribute('type', 'hidden');
         hiddenInput.setAttribute('name', 'stripeToken');
         hiddenInput.setAttribute('value', token.id);
         form.appendChild(hiddenInput);
 
-        // Wysłanie formularza
+        // Submit form
         form.submit();
     }
 </script>
+
 </body>
 </html>

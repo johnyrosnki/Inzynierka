@@ -3,6 +3,8 @@ from django.contrib import admin
 # Register your models here.
 from django.contrib import admin
 from .models import Ksiazka,Kategoria,Autor,Wydawnictwo
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
 class KategoriaAdmin(admin.ModelAdmin):
     list_display = ('nazwa',)
     search_fields = ('nazwa',)
@@ -29,4 +31,11 @@ class KsiazkaAdmin(admin.ModelAdmin):
     exclude = ('slug',)
 
 admin.site.register(Ksiazka, KsiazkaAdmin)
+class UserAdmin(BaseUserAdmin):
+    # Możesz dostosować wyświetlanie modelu User, ale pomiń odniesienia do ProfilUzytkownika
+    pass
+
+# Re-register UserAdmin
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
 
