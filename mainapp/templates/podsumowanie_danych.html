@@ -1,0 +1,15 @@
+<h2>Podsumowanie danych</h2>
+{% if dane %}
+    <p>Adres: {{ dane.adres }}</p>
+    <p>Kod pocztowy: {{ dane.kod_pocztowy }}</p>
+    <p>Miasto: {{ dane.miasto }}</p>
+    <p>Województwo: {{ dane.wojewodztwo }}</p>
+    <!-- Dodaj więcej pól, jeśli są dostępne i potrzebne -->
+{% else %}
+    <p>Brak danych do wyświetlenia. Proszę wrócić do formularza i wprowadzić dane.</p>
+{% endif %}
+{% if zalogowany %}
+    <a href="{% url 'profil_uzytkownika' %}">Wróć do profilu użytkownika</a>
+{% else %}
+    <a href="{% url 'podsumowanie' %}">Wróć do podsumowania</a>
+{% endif %}

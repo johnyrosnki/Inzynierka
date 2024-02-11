@@ -7,14 +7,14 @@ from django.shortcuts import render
 
 # Create your views here.
 from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse, HttpRequest
+from django.http import HttpResponse, JsonResponse, HttpRequest, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from PIL import Image, ImageOps
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from .forms import KsiazkaForm, UserEditForm, ProfilUzytkownikaForm
-from .models import Ksiazka, Kategoria, Autor, Wydawnictwo
+from .models import Ksiazka, Kategoria, Autor, Wydawnictwo, ProfilUzytkownika
 from django.shortcuts import render, get_object_or_404
 from .forms import RejestracjaForm
 from django.contrib.auth import authenticate, login
@@ -24,6 +24,7 @@ from django.views import View
 import json
 from django.http import JsonResponse
 from django.conf import settings
+from django.urls import reverse
 
 def base(request):
     return render(request,'base.html')
@@ -46,9 +47,9 @@ def lista_ksiazek(request):
         if ksiazka.okladka:
             # Przetwarzanie obrazu, ustawianie stałego rozmiaru (na przykład 300x300 pikseli)
             image_path = ksiazka.okladka.path
-            with Image.open(image_path) as img:
-                img_resized = ImageOps.fit(img, (200, 200), method=0, bleed=0.0, centering=(0.5, 0.5))
-                img_resized.save(image_path)
+            # with Image.open(image_path) as img:
+            #     img_resized = ImageOps.fit(img, (200, 200), method=0, bleed=0.0, centering=(0.5, 0.5))
+            #     img_resized.save(image_path)
     return render(request, 'lista_ksiazek.html', {'ksiazki': ksiazki})
 
 
@@ -311,5 +312,66 @@ def profil_uzytkownika(request):
         'user_form': user_form,
         'profil_form': profil_form
     })
+
+
+def zakladka_koszyka(request):
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            # Obsługa formularza dla zalogowanego użytkownika
+            try:
+                profil_uzytkownika = ProfilUzytkownika.objects.get(user=request.user)
+                profil_form = ProfilUzytkownikaForm(request.POST, instance=profil_uzytkownika)
+                if profil_form.is_valid():
+                    # Zamiast zapisywać, przechowujemy dane w sesji
+                    request.session['podsumowanie_danych'] = profil_form.cleaned_data
+                    return redirect('podsumowanie_danych')
+            except ProfilUzytkownika.DoesNotExist:
+                messages.error(request, 'Profil użytkownika nie istnieje.')
+                return redirect('profil_uzytkownika')
+        else:
+            # Obsługa formularza dla niezalogowanego użytkownika
+            profil_form = ProfilUzytkownikaForm(request.POST)
+            if profil_form.is_valid():
+                request.session['podsumowanie_danych'] = profil_form.cleaned_data
+                return redirect('podsumowanie_danych')
+            else:
+                messages.error(request, 'Wystąpił błąd przy przesyłaniu danych.')
+    else:
+        if request.user.is_authenticated:
+            # Dla zalogowanych, przekieruj od razu do podsumowania z danymi z profilu
+            try:
+                profil_uzytkownika = ProfilUzytkownika.objects.get(user=request.user)
+                profil_form = ProfilUzytkownikaForm(instance=profil_uzytkownika)
+                # Przechowaj dane w sesji
+                request.session['podsumowanie_danych'] = {
+                    'adres': profil_uzytkownika.adres,
+                    'kod_pocztowy': profil_uzytkownika.kod_pocztowy,
+                    'miasto': profil_uzytkownika.miasto,
+                    'wojewodztwo': profil_uzytkownika.wojewodztwo,
+                }
+                return redirect('podsumowanie_danych')
+            except ProfilUzytkownika.DoesNotExist:
+                profil_form = ProfilUzytkownikaForm()
+                user_form = UserEditForm(instance=request.user)
+        else:
+            profil_form = ProfilUzytkownikaForm()
+            user_form = None  # Dla niezalogowanych nie pokazujemy formularza użytkownika
+
+    context = {
+        'user_form': user_form if request.user.is_authenticated else None,
+        'profil_form': profil_form,
+        'zalogowany': request.user.is_authenticated,
+    }
+
+    return render(request, 'podsumowanie.html', context)
+
+def podsumowanie_danych(request):
+    dane = request.session.get('podsumowanie_danych', None)
+    if dane is None:
+        messages.error(request, 'Brak danych do wyświetlenia.')
+        return redirect('lista_ksiazek')
+
+    context = {'dane': dane}
+    return render(request, 'podsumowanie_danych.html', context)
 
 

@@ -10,7 +10,7 @@
                     <p>Ilość: {{ ksiazka.ilosc }}</p>
                     <p>Cena: {{ ksiazka.cena }} PLN</p>
                     {% if ksiazka.okladka %}
-                        <img src="{{ ksiazka.okladka }}" alt="{{ ksiazka.tytul }} Okładka">
+                        <img class="zdjecia-koszyk" src="{{ ksiazka.okladka }}" alt="{{ ksiazka.tytul }} Okładka">
                     {% else %}
                         <p>Brak obrazka</p>
                     {% endif %}
@@ -58,4 +58,6 @@ document.getElementById('pay-button').addEventListener('click', function() {
 </script>
     <a href="{% url 'inicjuj_platnosc' %}"
                                class="btn btn-secondary">Płatność</a>
+     <a href="{% url 'podsumowanie' %}"
+                               class="btn btn-secondary">przejdż dalej</a>
 {% endblock %}

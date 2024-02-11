@@ -14,6 +14,10 @@ class RejestracjaForm(UserCreationForm):
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2']
+        widgets = {
+            'password1': forms.PasswordInput(),
+            'password2': forms.PasswordInput(),
+        }
 class KoszykForm(forms.Form):
     ilosc = forms.IntegerField(min_value=1)
 

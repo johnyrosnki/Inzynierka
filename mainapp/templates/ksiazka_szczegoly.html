@@ -3,26 +3,38 @@
 {% block title %}{{ ksiazka.tytul }}{% endblock %}
 
 {% block content %}
-    <div class="row">
-        <div class="col-md-6">
-            <img src="{{ ksiazka.okladka.url }}" class="img-fluid" alt="{{ ksiazka.tytul }} Okładka">
-        </div>
-        <div class="col-md-6">
-            <h2>{{ ksiazka.tytul }}</h2>
-            <p>Autor: {{ ksiazka.autor }}</p>
-            <p>Kategorie:
-                {% for kategoria in ksiazka.kategorie.all %}
+    {% with autor=ksiazka.autor wydawnictwo=ksiazka.wydawnictwo kategoria=ksiazka.kategorie %}
+        <div class="row">
+            <div class="col-md-6 zdjecie">
+                <img src="{{ ksiazka.okladka.url }}" class="img-fluid" alt="{{ ksiazka.tytul }} Okładka">
+            </div>
+            <div class="col-md-6">
+                <h2>{{ ksiazka.tytul }}</h2>
+                <p>Autor:  <a href="{% url 'ksiazki_wedlug_autora' slug=autor.slug %}">{{ autor.imie }} {{ autor.nazwisko }}</a></p>
+                <p>Kategorie:
+                    {% for kategoria in ksiazka.kategorie.all %}
 
-                    <a href="{% url 'ksiazki_wedlug_kategorii' slug=kategoria.slug %}">{{ kategoria.nazwa }}</a>{% if not forloop.last %}, {% endif %}
-                {% endfor %}
-            </p>
-        <p>Cena: {{ ksiazka.cena }} zł</p>
-            <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-primary">Dodaj do koszyka</a>
+                        <a href="{% url 'ksiazki_wedlug_kategorii' slug=kategoria.slug %}">{{ kategoria.nazwa }}</a>
+                        {% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+                <p>Wydawnictwo:
+                    <a href="
+                    {% url 'wydawnictwo_szczegoly' slug=wydawnictwo.slug %}">{{ ksiazka.wydawnictwo }}
+                    </a>
+                </p>
+
+                <p>Cena: {{ ksiazka.cena }} zł</p>
+                <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-primary">Dodaj do koszyka</a>
+
+            </div>
+
         </div>
-    </div>
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <p>{{ ksiazka.opis }}</p>
+        <div class="row md-4">
+            <div class="col-md-12">
+                <h3>Opis:</h3>
+                <p>{{ ksiazka.opis }}</p>
+            </div>
         </div>
-    </div>
+    {% endwith %}
 {% endblock %}

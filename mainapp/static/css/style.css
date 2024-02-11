@@ -8,6 +8,7 @@ p {
 
 #content {
     margin: 20px 30px 100px 30px;
+    min-height: 600px;
 }
 
 footer {
@@ -15,9 +16,10 @@ footer {
     color: #fff;
     padding: 20px;
     text-align: center;
-    position: fixed;
+    position: relative;
     bottom: 0;
     width: 100%;
+
 
 }
 
@@ -164,7 +166,71 @@ h1, h2, h3, h4, h5 p {
 .przycisk-koszyk a:hover {
     color: #0a0a5c !important;
 }
-.card{background: none !important;}
-.tytul img {display: block !important;
-margin: 0 auto !important;
+
+.card {
+    background: none !important;
 }
+
+.tytul img {
+    display: block !important;
+    margin: 0 auto !important;
+    max-height: 244px !important;
+
+}
+
+form label {
+    display: flex;
+    margin-bottom: 0px !important;
+}
+
+.helptext, form li {
+    display: none;
+}
+
+.logowanie {
+    display: flex;
+    min-height: 500px !important;
+    background: #0a0a5c;
+    color: #ffffff;
+    border-radius: 20px;
+    align-items: center;
+    margin-top: 60px;
+
+}
+
+.formularz input {
+
+
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    padding: 5px;
+}
+
+.formularz label {
+    font-weight: bold;
+    color:#fff;
+}
+
+button {
+    background: olive;
+    color: white;
+    text-align: center;
+    border: none;
+    padding: 10px;
+
+    width: 150px;
+    border-radius: 20px !important;
+    font-weight: bold;
+    cursor: pointer
+}
+
+button:hover {
+    background: white;
+    color: #0a0a5c;
+    cursor: pointer;
+}
+.zdjecie img {display: block;
+margin: 0 auto;
+max-width: 400px;}
+.zdjecia-koszyk {max-height: 200px;}

@@ -4,10 +4,11 @@
 {% block title %}Rejestracja{% endblock %}
 
 {% block content %}
-    <h2>Rejestracja</h2>
-    <form method="post">
+     <div class="col-md-6 offset-md-3 logowanie">
+    <form class="col-md-8 offset-md-2 formularz" method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Zarejestruj się</button>
     </form>
+     </div>
 {% endblock %}
