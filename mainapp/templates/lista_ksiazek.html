@@ -2,7 +2,8 @@
 {% extends 'base.html' %}
 
 {% block title %}Lista Książek{% endblock %}
-<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js">
+ <script src="https://js.stripe.com/v3/"></script>
 
 {% block content %}
 
@@ -10,21 +11,22 @@
         <h1>Lista Książek</h1>
         <div class="row">
             {% for ksiazka in ksiazki %}
-                {% with autor=ksiazka.autor wydawnictwo=ksiazka.wydawnictwo kategoria=ksiazka.kategorie%}
+                {% with autor=ksiazka.autor wydawnictwo=ksiazka.wydawnictwo kategoria=ksiazka.kategorie %}
 
                     <div class="col-md-2">
                         <div class="card mb-2">
-                        <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">
-                            {% if ksiazka.okladka %}
+                            <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">
+                                {% if ksiazka.okladka %}
 
-                                <img src="{{ ksiazka.okladka.url }}" class="card-img-top"
-                                     alt="{{ ksiazka.tytul }} Okładka">
+                                    <img src="{{ ksiazka.okladka.url }}" class="card-img-top"
+                                         alt="{{ ksiazka.tytul }} Okładka">
 
-                            {% else %}
-                            {% endif %}
-                        </a>
+                                {% else %}
+                                {% endif %}
+                            </a>
                             <div class="card-body">
-                                <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">{{ ksiazka.tytul }} </a>
+                                <a class="tytul"
+                                   href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">{{ ksiazka.tytul }} </a>
 
                                 <p class="card-text">
 
@@ -32,33 +34,40 @@
                                     <a href="{% url 'ksiazki_wedlug_autora' slug=autor.slug %}">{{ autor.imie }} {{ autor.nazwisko }}</a>
 
                                 </p>
-{#                                <p class="card-text">{{ ksiazka.opis }}</p>#}
+                                {#                                <p class="card-text">{{ ksiazka.opis }}</p>#}
 
-{#                                <p class="card-text">Kategorie: {% for kategoria in ksiazka.kategorie.all %}#}
-{#                                    <a href="{% url 'ksiazki_wedlug_kategorii' kategoria.id %}">{{ kategoria.nazwa }}</a>#}
-{#                                    {% if not forloop.last %}, {% endif %}</p>#}
-{##}
-{#                                    <p></p>#}
-{#                                {% endfor %}#}
+                                {#                                <p class="card-text">Kategorie: {% for kategoria in ksiazka.kategorie.all %}#}
+                                {#                                    <a href="{% url 'ksiazki_wedlug_kategorii' kategoria.id %}">{{ kategoria.nazwa }}</a>#}
+                                {#                                    {% if not forloop.last %}, {% endif %}</p>#}
+                                {##}
+                                {#                                    <p></p>#}
+                                {#                                {% endfor %}#}
                                 <p class="card-text cena">{{ ksiazka.cena }} zł</p>
-{#                                <p class="card-text">{{ ksiazka.data_utworzenia }}</p>#}
-{#                                <p class="card-text">#}
-{#                                    <a href="#}
-{#                                       {% url 'wydawnictwo_szczegoly' slug=wydawnictwo.slug %}">{{ ksiazka.wydawnictwo }}#}
-{#                                    </a>#}
-{##}
-{##}
-{#                                </p>#}
+                                {#                                <p class="card-text">{{ ksiazka.data_utworzenia }}</p>#}
+                                {#                                <p class="card-text">#}
+                                {#                                    <a href="#}
+                                {#                                       {% url 'wydawnictwo_szczegoly' slug=wydawnictwo.slug %}">{{ ksiazka.wydawnictwo }}#}
+                                {#                                    </a>#}
+                                {##}
+                                {##}
+                                {#                                </p>#}
                                 <div class="przycisk-koszyk">
-                                <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}"  class="btn btn-secondary">Dodaj do koszyka</a>
+                                    <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-secondary">Dodaj do
+                                        koszyka</a>
 
-                                    </div>
+                                </div>
                             </div>
+                            <form
+                                    action="{% url 'create-checkout-session'  %}"
+                                    method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">Checkout</button>
+                            </form>
                         </div>
-{#                        {% if ksiazka.slug %}#}
-{#                            <a href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}"#}
-{#                               class="btn btn-secondary">Szczegóły</a>#}
-{#                        {% endif %}#}
+                        {#                        {% if ksiazka.slug %}#}
+                        {#                            <a href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}"#}
+                        {#                               class="btn btn-secondary">Szczegóły</a>#}
+                        {#                        {% endif %}#}
                     </div>
                 {% endwith %}
             {% endfor %}

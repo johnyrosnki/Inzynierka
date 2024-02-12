@@ -27,6 +27,11 @@
             {% endfor %}
         </ul>
         <p>Suma cen: {{ suma_cen }} PLN</p>
+
+        <form action="{% url 'create-checkout-session' %}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="Przejdź do płatności1123">
+        </form>
     {% else %}
         <p>Twój koszyk jest pusty.</p>
     {% endif %}

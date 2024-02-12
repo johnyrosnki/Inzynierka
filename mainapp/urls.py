@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
-from .views import dodaj_ksiazke, profil_uzytkownika, podsumowanie_danych
+from .views import dodaj_ksiazke, profil_uzytkownika, podsumowanie_danych, CreateStripeCheckoutSessionView, SuccessView, \
+    CancelView, StripeWebhookView
 from .views import lista_ksiazek, ksiazki_wedlug_kategorii, dodaj_do_koszyka, wyswietl_koszyk, usun_z_koszyka, \
     rejestracja, logowanie, zwieksz_ilosc, zmniejsz_ilosc, ksiazka_szczegoly, WyszukiwarkaView, ksiazki_wedlug_autora, \
     wydawnictwo_szczegoly, inicjuj_platnosc, procesuj_platnosc, potwierdzenie_platnosci, dodaj_dane_platnosci,zakladka_koszyka,podsumowanie_danych
@@ -33,6 +34,13 @@ urlpatterns = [
                   path('profil/', profil_uzytkownika, name='profil_uzytkownika'),
                 path('podsumowanie/', zakladka_koszyka, name='podsumowanie'),
                   path('podsumowanie_danych/', podsumowanie_danych, name='podsumowanie_danych'),
-
+                  path(
+                      "create-checkout-session",
+                      CreateStripeCheckoutSessionView.as_view(),
+                      name="create-checkout-session",
+                  ),
+                  path("success/", SuccessView.as_view(), name="success"),
+                  path("cancel/", CancelView.as_view(), name="cancel"),
+                  path("webhooks/stripe/", StripeWebhookView.as_view(), name="stripe-webhook"),
 
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

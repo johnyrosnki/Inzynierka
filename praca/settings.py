@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from django.utils import formats
 import os
+from decouple import config
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -143,7 +145,12 @@ MEDIA_ROOT = BASE_DIR / "media"
 formats.DATETIME_FORMAT = "d-m-Y H:i:s"
 formats.DATE_FORMAT = "d-m-Y"
 
-STRIPE_PUBLIC_KEY = 'pk_test_51OhFR8Dj1H2ahXE3QT5PaRIvmSdvL2hRrHE8rTCnbPx0qldfD8bA0GIkbBcwJztdsO0S5cHdoIlZtCva9CGrCTPu00BJCKmtWu'
-STRIPE_SECRET_KEY = 'sk_test_51OhFR8Dj1H2ahXE3Ltfa0CD355C5Os1Wk05c4wohsNEPgKZ45OqRjN1aPlaOz61CwcD9UwAAbC0DGcpgNACZ6Q5400DdnP9uZI'
+STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
 
+BACKEND_DOMAIN = config("BACKEND_DOMAIN")
+PAYMENT_SUCCESS_URL = config("PAYMENT_SUCCESS_URL")
+PAYMENT_CANCEL_URL = config("PAYMENT_CANCEL_URL")
+
+STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET")
 

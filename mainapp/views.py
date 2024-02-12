@@ -10,8 +10,10 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse, HttpRequest, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from PIL import Image, ImageOps
+from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.views.generic import TemplateView
 
 from .forms import KsiazkaForm, UserEditForm, ProfilUzytkownikaForm
 from .models import Ksiazka, Kategoria, Autor, Wydawnictwo, ProfilUzytkownika
@@ -104,6 +106,7 @@ def wyswietl_koszyk(request):
             'ilosc': ksiazka_info['ilosc'],
             'cena': Decimal(ksiazka_info['cena']),
             'okladka': ksiazka_info.get('okladka'),
+
         })
 
     return render(request, 'wyswietl_koszyk.html', {'ksiazki_w_koszyku': ksiazki_w_koszyku, 'suma_cen': suma_cen})
@@ -249,7 +252,7 @@ def procesuj_platnosc(request):
 
 def potwierdzenie_platnosci(request):
     return render(request, 'potwierdzenie_platnosci.html')  # Strona potwierdzająca pomyślną płatność
-stripe.api_key = 'sk_test_51OhFR8Dj1H2ahXE3Ltfa0CD355C5Os1Wk05c4wohsNEPgKZ45OqRjN1aPlaOz61CwcD9UwAAbC0DGcpgNACZ6Q5400DdnP9uZI'
+
 
 def dodaj_dane_platnosci(request: HttpRequest):
     if request.method == 'POST':
@@ -375,3 +378,73 @@ def podsumowanie_danych(request):
     return render(request, 'podsumowanie_danych.html', context)
 
 
+
+#Stripe
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+class CreateStripeCheckoutSessionView(View):
+    def post(self, request, *args, **kwargs):
+        koszyk = request.session.get('koszyk', [])
+
+        line_items = [
+            {
+                "price_data": {
+                    "currency": "pln",
+                    "unit_amount": int(float(ksiazka_info['cena']) * 100),
+                    "product_data": {
+                        "name": ksiazka_info['tytul'],
+                        "description": 'nazawa_test',
+                        # Zakomentowane, ponieważ wymaga konfiguracji URL obrazka
+                        # "images": [ksiazka.get('okladka', '')],
+                    },
+                },
+                "quantity": ksiazka_info['ilosc'],
+            } for ksiazka_id, ksiazka_info in koszyk.items()
+        ]
+
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            success_url=settings.PAYMENT_SUCCESS_URL,
+            cancel_url=settings.PAYMENT_CANCEL_URL,
+        )
+
+        return redirect(checkout_session.url)
+
+class SuccessView(TemplateView):
+    template_name = "success.html"
+
+class CancelView(TemplateView):
+    template_name = "cancel.html"
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+@method_decorator(csrf_exempt, name="dispatch")
+class StripeWebhookView(View):
+    """
+    Stripe webhook view to handle checkout session completed event.
+    """
+
+    def post(self, request, format=None):
+        payload = request.body
+        endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+        sig_header = request.META["HTTP_STRIPE_SIGNATURE"]
+        event = None
+
+        try:
+            event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=400)
+        except stripe.error.SignatureVerificationError as e:
+            # Invalid signature
+            return HttpResponse(status=400)
+
+        if event["type"] == "checkout.session.completed":
+            print("Payment successful")
+
+        # Can handle other events here.
+
+        return HttpResponse(status=200)
