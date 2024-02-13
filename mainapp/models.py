@@ -11,6 +11,7 @@ from django.utils.text import slugify
 from django.db.models.signals import pre_save
 from django.urls import reverse
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 from unidecode import unidecode
 from django.views import View
 
@@ -153,3 +154,17 @@ class ProfilUzytkownika(models.Model):
     def __str__(self):
         return self.user.username
 
+class Zamowienie(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Użytkownik")
+    tytul = models.CharField(max_length=200, verbose_name="Tytuł książki")
+    autor = models.CharField(max_length=200, verbose_name="Autor")
+    ilosc = models.PositiveIntegerField(verbose_name="Ilość")
+    cena = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cena")
+    zaplacone = models.BooleanField(default=False, verbose_name="Zapłacone")
+
+    def __str__(self):
+        return f"Zamówienie {self.id} użytkownika {self.user.username} - {'zapłacone' if self.zaplacone else 'niezapłacone'}"
+
+    class Meta:
+        verbose_name = "Zamówienie"
+        verbose_name_plural = "Zamówienia"

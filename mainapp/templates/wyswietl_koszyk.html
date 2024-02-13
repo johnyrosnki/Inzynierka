@@ -7,6 +7,7 @@
             {% for ksiazka in ksiazki_w_koszyku %}
                 <li>
                     <h2>{{ ksiazka.tytul }}</h2>
+                    <p>Autor: {{ ksiazka.autor}}</p>
                     <p>Ilość: {{ ksiazka.ilosc }}</p>
                     <p>Cena: {{ ksiazka.cena }} PLN</p>
                     {% if ksiazka.okladka %}

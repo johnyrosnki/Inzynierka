@@ -72,10 +72,11 @@ def dodaj_do_koszyka(request, ksiazka_id):
             'ilosc': 1,
             'cena': str(ksiazka.cena),  # Konwersja Decimal do str przed zapisaniem do sesji
             'okladka': ksiazka.okladka.url if ksiazka.okladka else None,
+            'autor': f"{ksiazka.autor.imie} {ksiazka.autor.nazwisko}",
         }
 
     request.session['koszyk'] = json.loads(json.dumps(koszyk, default=str))  # Konwersja Decimal do str przed zapisaniem do sesji
-
+    print(request.session['koszyk'])
     return redirect('lista_ksiazek')
 # views.py
 from django.shortcuts import render
@@ -106,6 +107,7 @@ def wyswietl_koszyk(request):
             'ilosc': ksiazka_info['ilosc'],
             'cena': Decimal(ksiazka_info['cena']),
             'okladka': ksiazka_info.get('okladka'),
+            'autor':ksiazka_info.get('autor'),
 
         })
 
@@ -250,8 +252,7 @@ def procesuj_platnosc(request):
         return JsonResponse({"error": "Request method not allowed"}, status=405)
 
 
-def potwierdzenie_platnosci(request):
-    return render(request, 'potwierdzenie_platnosci.html')  # Strona potwierdzająca pomyślną płatność
+
 
 
 def dodaj_dane_platnosci(request: HttpRequest):
@@ -293,7 +294,7 @@ def zrealizuj_platnosc(request):
                 source=token,  # Użycie tokenu płatności otrzymanego z formularza
             )
 
-            return JsonResponse({'status': 'success', 'message': 'Płatność zrealizowana pomyślnie.'})
+            return JsonResponse({'status': 'potwierdzenie', 'message': 'Płatność zrealizowana pomyślnie.'})
         except stripe.error.StripeError as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
 
@@ -369,12 +370,35 @@ def zakladka_koszyka(request):
     return render(request, 'podsumowanie.html', context)
 
 def podsumowanie_danych(request):
+    # Pobieranie danych do wysyłki z sesji
     dane = request.session.get('podsumowanie_danych', None)
     if dane is None:
         messages.error(request, 'Brak danych do wyświetlenia.')
         return redirect('lista_ksiazek')
 
-    context = {'dane': dane}
+    # Pobieranie danych o książkach w koszyku
+    koszyk = request.session.get('koszyk', {})
+    ksiazki_w_koszyku = []
+    suma_cen = Decimal('0.00')
+
+    for ksiazka_id, ksiazka_info in koszyk.items():
+        cena_za_pozycje = Decimal(ksiazka_info['cena']) * ksiazka_info['ilosc']
+        suma_cen += cena_za_pozycje
+        ksiazki_w_koszyku.append({
+            'tytul': ksiazka_info['tytul'],
+            'autor': ksiazka_info['autor'],
+            'ilosc': ksiazka_info['ilosc'],
+            'cena': ksiazka_info['cena'],
+            'cena_za_pozycje': cena_za_pozycje,
+        })
+
+    # Przekazywanie danych do wysyłki oraz informacji o książkach i ich łącznej cenie do szablonu
+    context = {
+        'dane': dane,
+        'ksiazki_w_koszyku': ksiazki_w_koszyku,
+        'suma_cen': suma_cen,
+    }
+
     return render(request, 'podsumowanie_danych.html', context)
 
 
@@ -383,7 +407,7 @@ def podsumowanie_danych(request):
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
-class CreateStripeCheckoutSessionView(View):
+class SesjaStripe(View):
     def post(self, request, *args, **kwargs):
         koszyk = request.session.get('koszyk', [])
 
@@ -394,9 +418,9 @@ class CreateStripeCheckoutSessionView(View):
                     "unit_amount": int(float(ksiazka_info['cena']) * 100),
                     "product_data": {
                         "name": ksiazka_info['tytul'],
-                        "description": 'nazawa_test',
+                        "description": ksiazka_info['autor'],
                         # Zakomentowane, ponieważ wymaga konfiguracji URL obrazka
-                        # "images": [ksiazka.get('okladka', '')],
+                       # "media": ksiazka_info.get('okladka')],
                     },
                 },
                 "quantity": ksiazka_info['ilosc'],
@@ -413,11 +437,11 @@ class CreateStripeCheckoutSessionView(View):
 
         return redirect(checkout_session.url)
 
-class SuccessView(TemplateView):
-    template_name = "success.html"
+class Sukces(TemplateView):
+    template_name = "potwierdzenie.html"
 
-class CancelView(TemplateView):
-    template_name = "cancel.html"
+class Anulowanie(TemplateView):
+    template_name = "anulowanie.html"
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -443,7 +467,7 @@ class StripeWebhookView(View):
             return HttpResponse(status=400)
 
         if event["type"] == "checkout.session.completed":
-            print("Payment successful")
+            print("Płatność pomyślnie zrealizowana")
 
         # Can handle other events here.
 

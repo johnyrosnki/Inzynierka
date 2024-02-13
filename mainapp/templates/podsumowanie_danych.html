@@ -1,3 +1,7 @@
+{% extends 'base.html' %}
+
+{% block title %}Koszyk{% endblock %}
+{% block content %}
 <h2>Podsumowanie danych</h2>
 {% if dane %}
     <p>Adres: {{ dane.adres }}</p>
@@ -8,8 +12,27 @@
 {% else %}
     <p>Brak danych do wyświetlenia. Proszę wrócić do formularza i wprowadzić dane.</p>
 {% endif %}
-{% if zalogowany %}
-    <a href="{% url 'profil_uzytkownika' %}">Wróć do profilu użytkownika</a>
+
+
+<h2>Książki w koszyku</h2>
+{% if ksiazki_w_koszyku %}
+    <ul>
+        {% for ksiazka in ksiazki_w_koszyku %}
+            <li>
+                <p>Tytuł: {{ ksiazka.tytul }}</p>
+                <p>Autor: {{ ksiazka.autor }}</p>
+                <p>Ilość: {{ ksiazka.ilosc }}</p>
+                <p>Cena: {{ ksiazka.cena }} PLN</p>
+                <!-- Dodaj inne informacje o książce, jeśli są dostępne i potrzebne -->
+            </li>
+        {% endfor %}
+    </ul>
+    <p><strong>Suma cen: {{ suma_cen }} PLN</strong></p>
 {% else %}
-    <a href="{% url 'podsumowanie' %}">Wróć do podsumowania</a>
+    <p>Twój koszyk jest pusty.</p>
 {% endif %}
+
+
+    <a href="{% url 'wyswietl_koszyk' %}">Wróc do koszyka</a>
+{% endblock content %}
+

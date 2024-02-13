@@ -24,17 +24,20 @@
                     </a>
                 </p>
 
+
                 <p>Cena: {{ ksiazka.cena }} zł</p>
                 <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-primary">Dodaj do koszyka</a>
-
-            </div>
-
-        </div>
-        <div class="row md-4">
-            <div class="col-md-12">
-                <h3>Opis:</h3>
+<p><br/></p>
+            <h3>Opis:</h3>
                 <p>{{ ksiazka.opis }}</p>
+
             </div>
+
         </div>
+
+            <div class="col-md-12">
+
+            </div>
+
     {% endwith %}
 {% endblock %}

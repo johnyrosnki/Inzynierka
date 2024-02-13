@@ -1,13 +1,14 @@
-{% comment %} templates/products/cancel.html {% endcomment %}
+{% comment %} templates/products/anulowanie.html {% endcomment %}
 
 {% extends "base.html" %} 
 {% block title %} Cancel {% endblock title%} 
 {% block content %}
 <div class="alert alert-info" role="alert">
-  Forgot to add something to your cart?
+  Zapomniałeś dodać coś do koszyka?
   <a
       href="{% url 'lista_ksiazek' %}"
-      >Go to Products</a
+      >Przejdź do produktów
+</a
     >
 </div>
 {% endblock content %}
