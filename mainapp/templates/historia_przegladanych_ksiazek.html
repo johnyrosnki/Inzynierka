@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Ostatnio przeglądane książki</h2>
+    <ul>
+     {% for wpis in przegladane_ksiazki|slice:":10" %}
+        <li>{{ wpis.ksiazka.tytul }} - przeglądane: {{ wpis.data_przegladania }}</li>
+    {% endfor %}
+    </ul>
+{% endblock %}

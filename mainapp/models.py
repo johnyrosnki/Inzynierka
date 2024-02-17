@@ -134,15 +134,7 @@ def dodaj_zakladke_po_dodaniu_ksiazki(sender, instance, created, **kwargs):
         # Jeśli nowa książka została utworzona, dodaj zakładkę
         Zakladka.objects.create( ksiazka=instance)
 
-class ZakupionaKsiazka(models.Model):
-    uzytkownik = models.ForeignKey(User, on_delete=models.CASCADE)
-    ksiazka = models.ForeignKey(Ksiazka, on_delete=models.CASCADE)
-    data_zakupu = models.DateTimeField(auto_now_add=True)
 
-class PrzegladanaKsiazka(models.Model):
-    uzytkownik = models.ForeignKey(User, on_delete=models.CASCADE)
-    ksiazka = models.ForeignKey(Ksiazka, on_delete=models.CASCADE)
-    data_przegladania = models.DateTimeField(auto_now_add=True)
 
 class ProfilUzytkownika(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -156,11 +148,12 @@ class ProfilUzytkownika(models.Model):
 
 class Zamowienie(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Użytkownik")
-    tytul = models.CharField(max_length=200, verbose_name="Tytuł książki")
-    autor = models.CharField(max_length=200, verbose_name="Autor")
-    ilosc = models.PositiveIntegerField(verbose_name="Ilość")
-    cena = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cena")
     zaplacone = models.BooleanField(default=False, verbose_name="Zapłacone")
+    adres = models.CharField(max_length=255, verbose_name="Adres", default="nazwa")
+    kod_pocztowy = models.CharField(max_length=10, verbose_name="Kod pocztowy",default="111")
+    miasto = models.CharField(max_length=100, verbose_name="Miasto",default="nazwa")
+    wojewodztwo = models.CharField(max_length=100, verbose_name="Województwo",default="nazwa")
+
 
     def __str__(self):
         return f"Zamówienie {self.id} użytkownika {self.user.username} - {'zapłacone' if self.zaplacone else 'niezapłacone'}"
@@ -168,3 +161,24 @@ class Zamowienie(models.Model):
     class Meta:
         verbose_name = "Zamówienie"
         verbose_name_plural = "Zamówienia"
+
+class PozycjaZamowienia(models.Model):
+    zamowienie = models.ForeignKey(Zamowienie, related_name='pozycje', on_delete=models.CASCADE, verbose_name="Zamówienie")
+    ksiazka = models.ForeignKey(Ksiazka, on_delete=models.CASCADE, verbose_name="Książka",default=16)  # Dodane
+    ilosc = models.PositiveIntegerField(verbose_name="Ilość")
+    cena = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Cena za sztukę")
+
+    def __str__(self):
+        return f"Pozycja: {self.ksiazka.tytul} x {self.ilosc} w zamówieniu {self.zamowienie.id}"
+
+    class Meta:
+        verbose_name = "Pozycja zamówienia"
+        verbose_name_plural = "Pozycje zamówienia"
+
+class PrzegladaneKsiazki(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    ksiazka = models.ForeignKey(Ksiazka, on_delete=models.CASCADE)
+    data_przegladania = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-data_przegladania']

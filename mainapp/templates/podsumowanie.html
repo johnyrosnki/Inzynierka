@@ -1,15 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista Książek{% endblock %}
+{% block content %}
 {% if not zalogowany %}
     <h2>Nie jesteś zalogowany</h2>
-    <p>Aby kontynuować, zaloguj się lub wprowadź swoje dane do wysyłki.</p>
-    <a href="{% url 'logowanie' %}">Zaloguj się</a>
+    <p>Aby kontynuować zaloguj się.</p>
 
-    <h3>Wprowadź dane do wysyłki</h3>
-    <form method="POST">
-        {% csrf_token %}
-        {{ profil_form.as_p }}
-        <button type="submit">Prześlij dane do wysyłki</button>
-    </form>
-{% else %}
-    <p>Przekierowuję do podsumowania...</p>
-    <!-- Tutaj możesz dodać JavaScript do automatycznego przekierowania lub po prostu pozwolić backendowi na przekierowanie -->
+
+
 {% endif %}
+{% endblock%}

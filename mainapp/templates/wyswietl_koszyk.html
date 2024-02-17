@@ -29,15 +29,12 @@
         </ul>
         <p>Suma cen: {{ suma_cen }} PLN</p>
 
-        <form action="{% url 'create-checkout-session' %}" method="post">
-            {% csrf_token %}
-            <input type="submit" value="Przejdź do płatności1123">
-        </form>
+
     {% else %}
         <p>Twój koszyk jest pusty.</p>
     {% endif %}
 
-    <button id="pay-button">Przejdź do płatności</button>
+
 
 <script>
 document.getElementById('pay-button').addEventListener('click', function() {
@@ -62,8 +59,7 @@ document.getElementById('pay-button').addEventListener('click', function() {
     });
 });
 </script>
-    <a href="{% url 'inicjuj_platnosc' %}"
-                               class="btn btn-secondary">Płatność</a>
-     <a href="{% url 'podsumowanie' %}"
-                               class="btn btn-secondary">przejdż dalej</a>
+
+     <a id="pay-button" href="{% url 'podsumowanie' %}"
+                               class="btn btn-secondary">Przejdź dalej</a>
 {% endblock %}

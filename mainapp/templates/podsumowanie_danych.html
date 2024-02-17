@@ -2,6 +2,11 @@
 
 {% block title %}Koszyk{% endblock %}
 {% block content %}
+    {% if messages %}
+  {% for message in messages %}
+    <div>{{ message }}</div>
+  {% endfor %}
+{% endif %}
 <h2>Podsumowanie danych</h2>
 {% if dane %}
     <p>Adres: {{ dane.adres }}</p>
@@ -31,6 +36,10 @@
 {% else %}
     <p>Twój koszyk jest pusty.</p>
 {% endif %}
+     <form action="{% url 'create-checkout-session' %}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="Przejdź do płatności">
+        </form>
 
 
     <a href="{% url 'wyswietl_koszyk' %}">Wróc do koszyka</a>

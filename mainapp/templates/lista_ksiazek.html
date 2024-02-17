@@ -57,12 +57,7 @@
 
                                 </div>
                             </div>
-                            <form
-                                    action="{% url 'create-checkout-session'  %}"
-                                    method="POST">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-primary">Checkout</button>
-                            </form>
+
                         </div>
                         {#                        {% if ksiazka.slug %}#}
                         {#                            <a href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}"#}

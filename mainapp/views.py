@@ -4,7 +4,7 @@ import stripe
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import render
-
+from django.utils import timezone
 # Create your views here.
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse, HttpRequest, HttpResponseRedirect
@@ -14,9 +14,11 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
+from collections import Counter
 
 from .forms import KsiazkaForm, UserEditForm, ProfilUzytkownikaForm
-from .models import Ksiazka, Kategoria, Autor, Wydawnictwo, ProfilUzytkownika
+from .models import Ksiazka, Kategoria, Autor, Wydawnictwo, ProfilUzytkownika, Zamowienie, PozycjaZamowienia, \
+    PrzegladaneKsiazki
 from django.shortcuts import render, get_object_or_404
 from .forms import RejestracjaForm
 from django.contrib.auth import authenticate, login
@@ -27,6 +29,7 @@ import json
 from django.http import JsonResponse
 from django.conf import settings
 from django.urls import reverse
+from django.contrib.auth.models import User
 
 def base(request):
     return render(request,'base.html')
@@ -161,6 +164,26 @@ def zmniejsz_ilosc(request, ksiazka_id):
 
 def ksiazka_szczegoly(request, slug):
     ksiazka = get_object_or_404(Ksiazka, slug=slug)
+    if request.user.is_authenticated:
+        # Aktualizacja historii przeglądanych książek
+        przegladana_ksiazka, created = PrzegladaneKsiazki.objects.get_or_create(
+            user=request.user,
+            ksiazka=ksiazka,
+            defaults={'data_przegladania': timezone.now()}
+        )
+
+        if not created:
+            # Jeśli wpis już istnieje, aktualizujemy datę przeglądania
+            przegladana_ksiazka.data_przegladania = timezone.now()
+            przegladana_ksiazka.save()
+
+        # Ograniczenie historii do ostatnich 10 książek
+        przegladane_ksiazki = PrzegladaneKsiazki.objects.filter(user=request.user).order_by('-data_przegladania')
+        if przegladane_ksiazki.count() > 10:
+            # Usunięcie najstarszych wpisów, aby zachować tylko 10 najnowszych
+            najstarsze_id_do_usuniecia = przegladane_ksiazki[10:].values_list('id', flat=True)
+            PrzegladaneKsiazki.objects.filter(id__in=list(najstarsze_id_do_usuniecia)).delete()
+
     return render(request, 'ksiazka_szczegoly.html', {'ksiazka': ksiazka})
 def wydawnictwo_szczegoly(request, slug):
     wydawnictwo = get_object_or_404(Wydawnictwo, slug=slug)
@@ -308,13 +331,18 @@ def profil_uzytkownika(request):
         if user_form.is_valid() and profil_form.is_valid():
             user_form.save()
             profil_form.save()
+            messages.success(request, 'Profil został pomyślnie zaktualizowany.')
             return redirect('profil_uzytkownika')
     else:
         user_form = UserEditForm(instance=request.user)
         profil_form = ProfilUzytkownikaForm(instance=request.user.profiluzytkownika)
+    pozycje_zamowien = PozycjaZamowienia.objects.filter(zamowienie__user=request.user,
+                                                        zamowienie__zaplacone=True).select_related('zamowienie',
+                                                                                                   'zamowienie__user')
     return render(request, 'profil_uzytkownika.html', {
         'user_form': user_form,
-        'profil_form': profil_form
+        'profil_form': profil_form,
+        'pozycje_zamowien': pozycje_zamowien
     })
 
 
@@ -410,6 +438,28 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 class SesjaStripe(View):
     def post(self, request, *args, **kwargs):
         koszyk = request.session.get('koszyk', [])
+        user = request.user
+        try:
+            profil_uzytkownika = ProfilUzytkownika.objects.get(user=user)
+            if not all([ profil_uzytkownika.adres, profil_uzytkownika.kod_pocztowy, profil_uzytkownika.miasto, profil_uzytkownika.wojewodztwo]):
+                # Jeśli jakiekolwiek wymagane dane są niekompletne, wyświetl komunikat i przekieruj
+                messages.error(request,
+                               "Proszę uzupełnić wszystkie wymagane dane w profilu przed przejściem do płatności.")
+                return redirect('profil_uzytkownika')
+
+        except ProfilUzytkownika.DoesNotExist:
+            messages.error(request, "Proszę uzupełnić profil.")
+            return redirect('profil_uzytkownika')
+
+        nowe_zamowienie = Zamowienie.objects.create(
+            user=user,
+            zaplacone=False,
+            adres=profil_uzytkownika.adres,
+            kod_pocztowy=profil_uzytkownika.kod_pocztowy,
+            miasto=profil_uzytkownika.miasto,
+            wojewodztwo=profil_uzytkownika.wojewodztwo,
+
+        )
 
         line_items = [
             {
@@ -427,13 +477,29 @@ class SesjaStripe(View):
             } for ksiazka_id, ksiazka_info in koszyk.items()
         ]
 
+
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=line_items,
             mode="payment",
             success_url=settings.PAYMENT_SUCCESS_URL,
             cancel_url=settings.PAYMENT_CANCEL_URL,
+            metadata={
+                'order_id': str(nowe_zamowienie.id)  # Przekazywanie identyfikatora zamówienia do metadanych sesji
+            }
         )
+
+        for ksiazka_id, ksiazka_info in koszyk.items():
+            ksiazka = Ksiazka.objects.get(id=ksiazka_id)
+            PozycjaZamowienia.objects.create(
+
+                zamowienie=nowe_zamowienie,
+                ksiazka=ksiazka,
+                ilosc=ksiazka_info['ilosc'],
+                cena=ksiazka_info['cena']
+            )
+
+
 
         return redirect(checkout_session.url)
 
@@ -447,9 +513,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 @method_decorator(csrf_exempt, name="dispatch")
 class StripeWebhookView(View):
-    """
-    Stripe webhook view to handle checkout session completed event.
-    """
+
 
     def post(self, request, format=None):
         payload = request.body
@@ -465,10 +529,70 @@ class StripeWebhookView(View):
         except stripe.error.SignatureVerificationError as e:
             # Invalid signature
             return HttpResponse(status=400)
+        order_id = None
 
-        if event["type"] == "checkout.session.completed":
-            print("Płatność pomyślnie zrealizowana")
+        if event['type'] == 'checkout.session.completed':
+            session = event['data']['object']
+            order_id = session.get('metadata', {}).get('order_id')
+        if order_id:
+            try:
+                zamowienie = Zamowienie.objects.get(id=order_id)
+                zamowienie.zaplacone = True
+                zamowienie.save()
+                user_id = session.get('metadata', {}).get('user_id')
 
-        # Can handle other events here.
+            except Zamowienie.DoesNotExist:
+                return HttpResponse(status=403)
 
-        return HttpResponse(status=200)
+        return HttpResponse(status=201)
+
+def szczegoly_ksiazki(request, pk):
+    ksiazka = get_object_or_404(Ksiazka, pk=pk)
+    if request.user.is_authenticated:
+        PrzegladaneKsiazki.objects.filter(user=request.user, ksiazka=ksiazka).delete() # Usuń istniejące wpisy tej książki
+        PrzegladaneKsiazki.objects.create(user=request.user, ksiazka=ksiazka) # Dodaj nowy wpis
+        # Ogranicz historię do ostatnich 10 książek
+        przegladane_ksiazki = PrzegladaneKsiazki.objects.filter(user=request.user).order_by('-data_przegladania')
+        if przegladane_ksiazki.count() > 10:
+            najstarsza_ksiazka_do_usuniecia = przegladane_ksiazki.last()
+            najstarsza_ksiazka_do_usuniecia.delete()
+    return redirect('szczegoly_ksiazki', pk=pk)
+
+@login_required
+def historia_przegladanych_ksiazek(request):
+    przegladane_ksiazki = PrzegladaneKsiazki.objects.filter(user=request.user)[:10]
+    return render(request, 'historia_przegladanych_ksiazek.html', {'przegladane_ksiazki': przegladane_ksiazki})
+
+def generuj_rekomendacje(user):
+    # Pobranie kategorii z zamówień użytkownika
+    zamowione_kategorie_ids = PozycjaZamowienia.objects.filter(
+        zamowienie__user=user,
+        zamowienie__zaplacone=True
+    ).values_list('ksiazka__kategorie', flat=True)
+
+    # Pobranie kategorii z przeglądanych książek
+    przegladane_kategorie_ids = PrzegladaneKsiazki.objects.filter(
+        user=user
+    ).values_list('ksiazka__kategorie', flat=True)
+
+    # Połączenie obu list i zliczenie wystąpień każdej kategorii
+    wszystkie_kategorie_ids = list(zamowione_kategorie_ids) + list(przegladane_kategorie_ids)
+    najpopularniejsze_kategorie = Counter(wszystkie_kategorie_ids).most_common()
+
+    # Wybór kategorii dla rekomendacji (np. 3 najpopularniejsze)
+    kategorie_dla_rekomendacji = [kategoria_id for kategoria_id, _ in najpopularniejsze_kategorie[:3]]
+
+    # Znalezienie książek w wybranych kategoriach, które użytkownik jeszcze nie przeglądał ani nie zamówił
+    ksiazki_do_rekomendacji = Ksiazka.objects.filter(
+        kategorie__in=kategorie_dla_rekomendacji
+    ).exclude(
+        Q(id__in=PozycjaZamowienia.objects.filter(zamowienie__user=user).values_list('ksiazka', flat=True)) |
+        Q(id__in=PrzegladaneKsiazki.objects.filter(user=user).values_list('ksiazka', flat=True))
+    ).distinct()[:10]  # Limit do 10 książek
+
+    return ksiazki_do_rekomendacji
+
+@login_required
+def rekomendacje(request):
+    rekomendacje = generuj_rekomendacje(request.user)
+    return render(request, 'rekomendacje.html', {'rekomendacje': rekomendacje})

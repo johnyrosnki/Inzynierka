@@ -1,0 +1,6 @@
+<h3>Rekomendowane dla Ciebie książki</h3>
+<ul>
+{% for ksiazka in rekomendacje %}
+    <li>{{ ksiazka.tytul }} ({{ ksiazka.autor }})</li>
+{% endfor %}
+</ul>
