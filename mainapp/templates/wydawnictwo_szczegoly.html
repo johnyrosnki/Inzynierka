@@ -1,29 +1,87 @@
 {% extends 'base.html' %}
 
-{% block title %}Książki autora: {{ wydawnictwo.nazwa }}{% endblock %}
+{% block title %}Książki wydawnictwa: {{ wydawnictwo.nazwa }}{% endblock %}
 
 {% block content %}
     <div class="container">
-        <h1>Książki autora: {{ wydawnictwo.nazwa }}</h1>
-
+        <h1>Książki wydawnictwa: {{ wydawnictwo.nazwa }}</h1>
         <div class="row">
-            {% for ksiazka in wydawnictwo.ksiazki %}
-                <div class="col-md-3">
-                    <div class="card mb-3">
-                        {% if ksiazka.okladka %}
-                            <img src="{{ ksiazka.okladka.url }}" class="card-img-top" alt="{{ ksiazka.tytul }} Okładka">
-                        {% else %}
-                            <!-- Dodaj fallback lub inne działania w przypadku braku okładki -->
-                        {% endif %}
-                        <div class="card-body">
-                            <h5 class="card-title">{{ ksiazka.tytul }}</h5>
-                            <p class="card-text">{{ ksiazka.autor }}</p>
-                            <p class="card-text">{{ ksiazka.opis }}</p>
-                            <p class="card-text">Kategorie: {% for kategoria in ksiazka.kategorie.all %}{{ kategoria.nazwa }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+               {% for ksiazka in ksiazki %}
+                {% with autor=ksiazka.autor wydawnictwo=ksiazka.wydawnictwo kategoria=ksiazka.kategorie %}
+
+                    <div class="col-md-2">
+                        <div class="card mb-2">
+
+                            <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">
+                                {% if ksiazka.okladka %}
+
+                                    <img src="{{ ksiazka.okladka.url }}" class="card-img-top"
+                                         alt="{{ ksiazka.tytul }} Okładka">
+
+                                {% else %}
+                                {% endif %}
+                            </a>
+                            <div class="card-body">
+                                 <div class="tytul-ksiazki">
+                                <a class="tytul"
+
+                                   href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">{{ ksiazka.tytul }} </a>
+                                 </div>
+                                <p class="card-text">
+
+
+                                    <a href="{% url 'ksiazki_wedlug_autora' slug=autor.slug %}">{{ autor.imie }} {{ autor.nazwisko }}</a>
+
+                                </p>
+                                {#                                <p class="card-text">{{ ksiazka.opis }}</p>#}
+
+                                {#                                <p class="card-text">Kategorie: {% for kategoria in ksiazka.kategorie.all %}#}
+                                {#                                    <a href="{% url 'ksiazki_wedlug_kategorii' kategoria.id %}">{{ kategoria.nazwa }}</a>#}
+                                {#                                    {% if not forloop.last %}, {% endif %}</p>#}
+                                {##}
+                                {#                                    <p></p>#}
+                                {#                                {% endfor %}#}
+                                <p class="card-text cena">{{ ksiazka.cena }} zł</p>
+                                {#                                <p class="card-text">{{ ksiazka.data_utworzenia }}</p>#}
+                                {#                                <p class="card-text">#}
+                                {#                                    <a href="#}
+                                {#                                       {% url 'wydawnictwo_szczegoly' slug=wydawnictwo.slug %}">{{ ksiazka.wydawnictwo }}#}
+                                {#                                    </a>#}
+                                {##}
+                                {##}
+                                {#                                </p>#}
+                                <div class="przycisk-koszyk">
+                                    <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-secondary">Dodaj do
+                                        koszyka</a>
+
+                                </div>
+                            </div>
+
                         </div>
+                        {#                        {% if ksiazka.slug %}#}
+                        {#                            <a href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}"#}
+                        {#                               class="btn btn-secondary">Szczegóły</a>#}
+                        {#                        {% endif %}#}
                     </div>
-                </div>
+                {% endwith %}
             {% endfor %}
         </div>
     </div>
+      <script>
+window.onload = function() {
+    function equalizeCardHeights() {
+        var maxHeight = 0;
+        $('.card .tytul-ksiazki').each(function() {
+            var thisHeight = $(this).outerHeight();
+            if (thisHeight > maxHeight) {
+                maxHeight = thisHeight;
+            }
+        });
+        $('.card .tytul-ksiazki').height(maxHeight);
+    }
+
+    equalizeCardHeights();
+    $(window).resize(equalizeCardHeights);
+};
+</script>
 {% endblock %}

@@ -1,6 +1,92 @@
-<h3>Rekomendowane dla Ciebie książki</h3>
-<ul>
-{% for ksiazka in rekomendacje %}
-    <li>{{ ksiazka.tytul }} ({{ ksiazka.autor }})</li>
-{% endfor %}
-</ul>
+{% extends 'base.html' %}
+
+{% block title %}Książki autora: {{ autor.imie }} {{ autor.nazwisko }}{% endblock %}
+
+{% block content %}
+<h2>Polecane książki dla Ciebie</h2>
+<div id="karuzela">
+    <div class="karuzela-widok">
+        <div class="karuzela-tresc">
+            {% for ksiazka in rekomendacje %}
+            <div class="karuzela-element col-md-2">
+                <div class="card mb-2">
+                    <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">
+                        {% if ksiazka.okladka %}
+                        <img src="{{ ksiazka.okladka.url }}" class="card-img-top" alt="{{ ksiazka.tytul }} Okładka">
+                        {% endif %}
+                    </a>
+                    <div class="card-body">
+                        <a href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}" class="tytul">{{ ksiazka.tytul }}</a>
+                        <p class="card-text">
+                            <a href="{% url 'ksiazki_wedlug_autora' slug=ksiazka.autor.slug %}">{{ ksiazka.autor.imie }} {{ ksiazka.autor.nazwisko }}</a>
+                        </p>
+                        <p class="card-text cena">{{ ksiazka.cena }} zł</p>
+                        <div class="przycisk-koszyk">
+                            <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-secondary">Dodaj do koszyka</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <button id="prev" onclick="przewinWLewo()">Poprzedni</button>
+    <button id="next" onclick="przewinWPrawo()">Następny</button>
+</div>
+
+
+
+
+
+    {% for ksiazka in rekomendacje %}
+          <div class=" col-md-12">
+    <div class=" col-md-2">
+                <div class="card mb-2">
+                    <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">
+                        {% if ksiazka.okladka %}
+                        <img src="{{ ksiazka.okladka.url }}" class="card-img-top" alt="{{ ksiazka.tytul }} Okładka">
+                        {% endif %}
+                    </a>
+                    <div class="card-body">
+                        <a href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}" class="tytul">{{ ksiazka.tytul }}</a>
+                        <p class="card-text">
+                            <a href="{% url 'ksiazki_wedlug_autora' slug=ksiazka.autor.slug %}">{{ ksiazka.autor.imie }} {{ ksiazka.autor.nazwisko }}</a>
+                        </p>
+                        <p class="card-text cena">{{ ksiazka.cena }} zł</p>
+                        <div class="przycisk-koszyk">
+                            <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-secondary">Dodaj do koszyka</a>
+                        </div>
+                    </div>
+
+
+    </div>
+</div>
+</div>
+    {% endfor %}
+    <script>
+let indeksAktualny = 0;
+
+function przewinWPrawo() {
+    const tresc = document.querySelector('.karuzela-tresc');
+    const maksIndeks = tresc.children.length - 6;
+    if (indeksAktualny < maksIndeks) {
+        indeksAktualny++;
+        updateKaruzela();
+    }
+}
+
+function przewinWLewo() {
+    if (indeksAktualny > 0) {
+        indeksAktualny--;
+        updateKaruzela();
+    }
+}
+
+function updateKaruzela() {
+    const tresc = document.querySelector('.karuzela-tresc');
+    tresc.style.transform = `translateX(-${indeksAktualny * 210}px)`; // 210px to przykładowa szerokość elementu z marginesem
+}
+</script>
+
+{% endblock content %}
+

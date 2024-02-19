@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
+     <div class="col-md-8 content-profil" >
+        <div class="col-md-8">
+
 <h2>Profil Użytkownika</h2>
 <form method="post">
     {% csrf_token %}
@@ -8,16 +11,29 @@
     {{ profil_form.as_p }}
     <button type="submit">Zapisz zmiany</button>
 </form>
+        </div>
+        <div class="col-md-5 tabela-profil">
 <h3>Zamówione książki:</h3>
 {% if pozycje_zamowien %}
-    <ul>
+
+    <table>
+    <tr>
+        <td>Tytuł:</td>
+        <td>Autor:</td>
+        <td>Ilość:</td>
+    </tr>
         {% for pozycja in pozycje_zamowien %}
-            <li>{{ pozycja.ksiazka.tytul }}{{ pozycja.ksiazka.autor }} - Ilość: {{ pozycja.ilosc }}</li>
+            <tr>
+            <td>{{ pozycja.ksiazka.tytul }}</td>
+            <td>{{ pozycja.ksiazka.autor }}</td>
+            <td> {{ pozycja.ilosc }}</td>
+            </tr>
         {% endfor %}
-    </ul>
+    </table>
 {% else %}
     <p>Nie zamówiłeś jeszcze żadnych książek.</p>
 {% endif %}
-
+    </div>
+     </div>
 {% endblock %}
 

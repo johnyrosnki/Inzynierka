@@ -21,8 +21,9 @@
                             {% endif %}
                         </a>
                             <div class="card-body">
+                                 <div class="tytul-ksiazki">
                                 <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">{{ ksiazka.tytul }} </a>
-
+                                 </div>
                                 <p class="card-text">
 
 
@@ -60,5 +61,21 @@
     </div>
     </div>
     </div>
+  <script>
+window.onload = function() {
+    function equalizeCardHeights() {
+        var maxHeight = 0;
+        $('.card .tytul-ksiazki').each(function() {
+            var thisHeight = $(this).outerHeight();
+            if (thisHeight > maxHeight) {
+                maxHeight = thisHeight;
+            }
+        });
+        $('.card .tytul-ksiazki').height(maxHeight);
+    }
 
+    equalizeCardHeights();
+    $(window).resize(equalizeCardHeights);
+};
+</script>
 {% endblock %}

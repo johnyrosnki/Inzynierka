@@ -3,31 +3,53 @@
 {% block title %}Koszyk{% endblock %}
 {% block content %}
     {% if ksiazki_w_koszyku %}
-        <ul>
+        <div class="col-md-12 content-koszyk" >
+         <div class="col-md-8">
+        <table>
+
             {% for ksiazka in ksiazki_w_koszyku %}
-                <li>
-                    <h2>{{ ksiazka.tytul }}</h2>
-                    <p>Autor: {{ ksiazka.autor}}</p>
-                    <p>Ilość: {{ ksiazka.ilosc }}</p>
-                    <p>Cena: {{ ksiazka.cena }} PLN</p>
-                    {% if ksiazka.okladka %}
+                <tr>
+                <td>
+                 {% if ksiazka.okladka %}
                         <img class="zdjecia-koszyk" src="{{ ksiazka.okladka }}" alt="{{ ksiazka.tytul }} Okładka">
                     {% else %}
                         <p>Brak obrazka</p>
                     {% endif %}
+                </td>
+                <td>
+                    <h2>{{ ksiazka.tytul }}</h2>
+                </td>
+                      <td>
+                    <p>Autor: <br/>{{ ksiazka.autor}}</p>
+
+
+                    </td>
+                <td>
                     <form action="{% url 'zwieksz_ilosc' ksiazka.id %}" method="post">
                         {% csrf_token %}
-                        <input type="submit" value="Zwiększ ilość">
+                        <input type="submit" value="+">
                     </form>
-                    <form action="{% url 'zmniejsz_ilosc' ksiazka.id %}" method="post">
+                </td>
+                  <td>
+                    <p>Ilość: <br/>{{ ksiazka.ilosc }}</p>
+                        </td>
+                <td> <form action="{% url 'zmniejsz_ilosc' ksiazka.id %}" method="post">
                         {% csrf_token %}
-                        <input type="submit" value="Zmniejsz ilość">
+                        <input type="submit" value="-">
                     </form>
-                    <!-- Dodaj inne informacje o książce, które chcesz wyświetlić -->
-                </li>
+                </td>
+                  <td>
+                    <p>Cena: <br/>{{ ksiazka.cena }} PLN</p>
+                </td>
+
+
+                </tr>
+
             {% endfor %}
-        </ul>
-        <p>Suma cen: {{ suma_cen }} PLN</p>
+        </table>
+         </div>
+         <div class="col-md-5 dalej">
+        <p class="cena-koszyk">Do zapalaty: <br/> <span >{{ suma_cen }} PLN</span></p>
 
 
     {% else %}
@@ -59,7 +81,10 @@ document.getElementById('pay-button').addEventListener('click', function() {
     });
 });
 </script>
-
+<br/>
+    <br/>
      <a id="pay-button" href="{% url 'podsumowanie' %}"
-                               class="btn btn-secondary">Przejdź dalej</a>
+                               class="btn btn-secondary">Przejdź do podsumowania</a>
+    </div>
+</div>
 {% endblock %}

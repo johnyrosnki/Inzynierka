@@ -2,12 +2,14 @@
 
 {% block title %}Koszyk{% endblock %}
 {% block content %}
+    <div class="col-md-10 content-profil" >
+    <div class="col-md-8" >
     {% if messages %}
   {% for message in messages %}
     <div>{{ message }}</div>
   {% endfor %}
 {% endif %}
-<h2>Podsumowanie danych</h2>
+<h2>Podsumowanie danych do wysyłki</h2>
 {% if dane %}
     <p>Adres: {{ dane.adres }}</p>
     <p>Kod pocztowy: {{ dane.kod_pocztowy }}</p>
@@ -17,31 +19,46 @@
 {% else %}
     <p>Brak danych do wyświetlenia. Proszę wrócić do formularza i wprowadzić dane.</p>
 {% endif %}
-
-
-<h2>Książki w koszyku</h2>
+ <a class="btn btn-secondary" href="{% url 'wyswietl_koszyk' %}">Wróc do koszyka</a>
+    </div>
+      <div class="col-md-5 podsumowanie" >
+<h2>Książki w koszyku:</h2>
 {% if ksiazki_w_koszyku %}
-    <ul>
+   <table>
+   <tr>
+       <td>Tytuł:</td>
+        <td>Autor:</td>
+        <td>Ilość:</td>
+        <td>Cena:</td>
+   </tr>
         {% for ksiazka in ksiazki_w_koszyku %}
-            <li>
-                <p>Tytuł: {{ ksiazka.tytul }}</p>
-                <p>Autor: {{ ksiazka.autor }}</p>
-                <p>Ilość: {{ ksiazka.ilosc }}</p>
-                <p>Cena: {{ ksiazka.cena }} PLN</p>
-                <!-- Dodaj inne informacje o książce, jeśli są dostępne i potrzebne -->
-            </li>
+            <tr>
+                <td>{{ ksiazka.tytul }}</td>
+                <td>{{ ksiazka.autor }}</td>
+                <td>{{ ksiazka.ilosc }}</td>
+                <td><strong>{{ ksiazka.cena }} PLN</strong></td>
+
+            </tr>
         {% endfor %}
-    </ul>
-    <p><strong>Suma cen: {{ suma_cen }} PLN</strong></p>
+    </table>
+    <p class="cena-koszyk"><strong>Razem: {{ suma_cen }} PLN</strong></p>
 {% else %}
     <p>Twój koszyk jest pusty.</p>
+
 {% endif %}
-     <form action="{% url 'create-checkout-session' %}" method="post">
+       <form action="{% url 'create-checkout-session' %}" method="post">
+
             {% csrf_token %}
-            <input type="submit" value="Przejdź do płatności">
+            <input class="przycisk" type="submit" value="Przejdź do płatności">
         </form>
+       </div>
+     </div>
+      <div class="col-md-8">
 
 
-    <a href="{% url 'wyswietl_koszyk' %}">Wróc do koszyka</a>
+
+
+
+   </div>
 {% endblock content %}
 

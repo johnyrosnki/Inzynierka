@@ -209,28 +209,79 @@ form label {
 
 .formularz label {
     font-weight: bold;
-    color:#fff;
+    color: #fff;
 }
 
-button {
-    background: olive;
+button  {
+
+ background: olive;
     color: white;
     text-align: center;
     border: none;
     padding: 10px;
-
     width: 150px;
     border-radius: 20px !important;
     font-weight: bold;
     cursor: pointer
 }
+.przycisk {width:  200px;
+ background: olive;
+    color: white;
+    text-align: center;
+    border: none;
+    padding: 10px;
+border-radius: 20px !important;
+    font-weight: bold;
+    cursor: pointer}
 
 button:hover {
     background: white;
     color: #0a0a5c;
     cursor: pointer;
 }
-.zdjecie img {display: block;
-margin: 0 auto;
-max-width: 350px;}
-.zdjecia-koszyk {max-height: 200px;}
+
+.zdjecie img {
+    display: block;
+    margin: 0 auto;
+    max-width: 350px;
+}
+
+.zdjecia-koszyk {
+    max-height: 100px;
+    width: auto;
+}
+
+tr {
+    border-bottom: 1px solid #0a0a5c;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+
+}
+td p{text-align: center;}
+.content-koszyk,.content-profil{display: flex}
+.dalej{text-align: center;}
+.cena-koszyk{font-size: 30px;
+color:#0a0a5c;
+font-weight: bold;}
+.tabela-profil table td{text-align: center;}
+.pagination{display: flex;
+    justify-content: center !important;
+}
+.podsumowanie table {width: 100%;}
+#karuzela .karuzela-widok {
+    overflow: hidden;
+}
+
+.karuzela-tresc {
+    display: flex;
+    transition: transform 0.5s ease;
+}
+
+.karuzela-element {
+    flex: 0 0 auto;
+    width: 200px; /* Dostosuj szerokość do swoich potrzeb */
+    margin-right: 10px; /* Opcjonalnie, dla lepszego wyglądu */
+}

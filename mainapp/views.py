@@ -2,6 +2,7 @@ import json
 
 import stripe
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Q
 from django.shortcuts import render
 from django.utils import timezone
@@ -55,6 +56,16 @@ def lista_ksiazek(request):
             # with Image.open(image_path) as img:
             #     img_resized = ImageOps.fit(img, (200, 200), method=0, bleed=0.0, centering=(0.5, 0.5))
             #     img_resized.save(image_path)
+    paginator = Paginator(ksiazki, 16)  # 20 książek na stronę
+    page = request.GET.get('page')
+    try:
+        ksiazki = paginator.page(page)
+    except PageNotAnInteger:
+        # Jeśli strona nie jest liczbą całkowitą, dostarcz pierwszą stronę.
+        ksiazki = paginator.page(1)
+    except EmptyPage:
+        # Jeśli strona jest poza zakresem dostarcz ostatnią stronę wyników.
+        ksiazki = paginator.page(paginator.num_pages)
     return render(request, 'lista_ksiazek.html', {'ksiazki': ksiazki})
 
 
@@ -187,7 +198,12 @@ def ksiazka_szczegoly(request, slug):
     return render(request, 'ksiazka_szczegoly.html', {'ksiazka': ksiazka})
 def wydawnictwo_szczegoly(request, slug):
     wydawnictwo = get_object_or_404(Wydawnictwo, slug=slug)
-    return render(request, 'wydawnictwo_szczegoly.html', {'wydawnictwo': wydawnictwo})
+    # Pobranie książek dla wydawnictwa
+    ksiazki = Ksiazka.objects.filter(wydawnictwo=wydawnictwo)
+    return render(request, 'wydawnictwo_szczegoly.html', {
+        'wydawnictwo': wydawnictwo,
+        'ksiazki': ksiazki  # Przekazanie listy książek do szablonu
+    })
 def ksiazki_wedlug_autora(request, slug):
     autor = get_object_or_404(Autor, slug=slug)
     ksiazki_autora = autor.ksiazka_set.all()
@@ -563,6 +579,7 @@ def historia_przegladanych_ksiazek(request):
     przegladane_ksiazki = PrzegladaneKsiazki.objects.filter(user=request.user)[:10]
     return render(request, 'historia_przegladanych_ksiazek.html', {'przegladane_ksiazki': przegladane_ksiazki})
 
+
 def generuj_rekomendacje(user):
     # Pobranie kategorii z zamówień użytkownika
     zamowione_kategorie_ids = PozycjaZamowienia.objects.filter(
@@ -579,20 +596,31 @@ def generuj_rekomendacje(user):
     wszystkie_kategorie_ids = list(zamowione_kategorie_ids) + list(przegladane_kategorie_ids)
     najpopularniejsze_kategorie = Counter(wszystkie_kategorie_ids).most_common()
 
-    # Wybór kategorii dla rekomendacji (np. 3 najpopularniejsze)
-    kategorie_dla_rekomendacji = [kategoria_id for kategoria_id, _ in najpopularniejsze_kategorie[:3]]
+    ksiazki_do_rekomendacji = []
+    # Iteracja przez kategorie zaczynając od najpopularniejszej
+    for kategoria_id, _ in najpopularniejsze_kategorie:
+        # Określenie liczby książek do pobrania na podstawie rangi kategorii
+        liczba_ksiazek = 4 if _ >= 4 else 2  # Dla najpopularniejszej kategorii bierzemy 5 książek, dla pozostałych 1
 
-    # Znalezienie książek w wybranych kategoriach, które użytkownik jeszcze nie przeglądał ani nie zamówił
-    ksiazki_do_rekomendacji = Ksiazka.objects.filter(
-        kategorie__in=kategorie_dla_rekomendacji
-    ).exclude(
-        Q(id__in=PozycjaZamowienia.objects.filter(zamowienie__user=user).values_list('ksiazka', flat=True)) |
-        Q(id__in=PrzegladaneKsiazki.objects.filter(user=user).values_list('ksiazka', flat=True))
-    ).distinct()[:10]  # Limit do 10 książek
+        # Znalezienie książek w danej kategorii, które użytkownik jeszcze nie przeglądał ani nie zamówił
+        ksiazki_w_kategorii = Ksiazka.objects.filter(
+            kategorie=kategoria_id
+        ).exclude(
+            Q(id__in=PozycjaZamowienia.objects.filter(zamowienie__user=user).values_list('ksiazka', flat=True)) |
+            Q(id__in=PrzegladaneKsiazki.objects.filter(user=user).values_list('ksiazka', flat=True))
+        ).distinct()[:liczba_ksiazek]
 
-    return ksiazki_do_rekomendacji
+        ksiazki_do_rekomendacji.extend(ksiazki_w_kategorii)
+
+        # Jeśli zebraliśmy już 10 książek, przerywamy pętlę
+        if len(ksiazki_do_rekomendacji) >= 10:
+            break
+
+    # Ograniczenie listy do 10 książek, jeśli zostało zebranych więcej
+    return ksiazki_do_rekomendacji[:10]
+
 
 @login_required
 def rekomendacje(request):
-    rekomendacje = generuj_rekomendacje(request.user)
-    return render(request, 'rekomendacje.html', {'rekomendacje': rekomendacje})
+    rekomendacje_ksiazek = generuj_rekomendacje(request.user)
+    return render(request, 'rekomendacje.html', {'rekomendacje': rekomendacje_ksiazek})

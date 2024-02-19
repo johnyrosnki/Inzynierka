@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 class KategoriaAdmin(admin.ModelAdmin):
     list_display = ('nazwa',)
     search_fields = ('nazwa',)
+    exclude = ('slug',)
 admin.site.register(Kategoria, KategoriaAdmin)
 class AutorAdmin(admin.ModelAdmin):
     list_display = ('imie', 'nazwisko')

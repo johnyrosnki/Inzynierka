@@ -2,7 +2,7 @@
 {% extends 'base.html' %}
 
 {% block title %}Lista Książek{% endblock %}
-<script src="https://code.jquery.com/jquery-3.2.1.min.js">
+ <script src="https://code.jquery.com/jquery-3.6.0.min.js"  defer></script>
  <script src="https://js.stripe.com/v3/"></script>
 
 {% block content %}
@@ -25,9 +25,10 @@
                                 {% endif %}
                             </a>
                             <div class="card-body">
+                                <div class="tytul-ksiazki">
                                 <a class="tytul"
                                    href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">{{ ksiazka.tytul }} </a>
-
+</div>
                                 <p class="card-text">
 
 
@@ -70,5 +71,49 @@
     </div>
     </div>
     </div>
+  <div class="pagination">
+        <span class="step-links">
+            {% if ksiazki.has_previous %}
+                <a href="?page=1">&laquo; pierwsza</a>
+                <a href="?page={{ ksiazki.previous_page_number }}">poprzednia</a>
+            {% endif %}
+
+            <span class="current">
+                Strona {{ ksiazki.number }} z {{ ksiazki.paginator.num_pages }}.
+            </span>
+
+            {% if ksiazki.has_next %}
+                <a href="?page={{ ksiazki.next_page_number }}">następna</a>
+                <a href="?page={{ ksiazki.paginator.num_pages }}">ostatnia &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+</div>
+    <script>
+window.onload = function() {
+    function equalizeCardHeights() {
+        var maxHeight = 0;
+        $('.card .tytul-ksiazki').each(function() {
+            var thisHeight = $(this).outerHeight();
+            if (thisHeight > maxHeight) {
+                maxHeight = thisHeight;
+            }
+        });
+        $('.card .tytul-ksiazki').height(maxHeight);
+    }
+
+    equalizeCardHeights();
+    $(window).resize(equalizeCardHeights);
+};
+</script>
 {% endblock %}
+
+
+
+
+
+
+
+
+
 
