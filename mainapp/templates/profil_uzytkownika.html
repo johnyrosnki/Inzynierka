@@ -1,9 +1,13 @@
 {% extends 'base.html' %}
 
 {% block content %}
-     <div class="col-md-8 content-profil" >
-        <div class="col-md-8">
-
+     <div class="col-md-10 content-profil" >
+        <div class="col-md-5">
+  {% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-success" role="alert">{{ message }}</div>
+  {% endfor %}
+{% endif %}
 <h2>Profil Użytkownika</h2>
 <form method="post">
     {% csrf_token %}
@@ -12,8 +16,8 @@
     <button type="submit">Zapisz zmiany</button>
 </form>
         </div>
-        <div class="col-md-5 tabela-profil">
-<h3>Zamówione książki:</h3>
+        <div class="col-md-7 tabela-profil">
+<h3>Zakupione książki:</h3>
 {% if pozycje_zamowien %}
 
     <table>

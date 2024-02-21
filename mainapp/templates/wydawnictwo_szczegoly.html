@@ -84,4 +84,21 @@ window.onload = function() {
     $(window).resize(equalizeCardHeights);
 };
 </script>
+     <script>
+window.onload = function() {
+    function equalizeCardHeights() {
+        var maxHeight = 0;
+        $('.card .tytul-ksiazki').each(function() {
+            var thisHeight = $(this).outerHeight();
+            if (thisHeight > maxHeight) {
+                maxHeight = thisHeight;
+            }
+        });
+        $('.card .tytul-ksiazki').height(maxHeight);
+    }
+
+    equalizeCardHeights();
+    $(window).resize(equalizeCardHeights);
+};
+</script>
 {% endblock %}

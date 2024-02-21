@@ -17,7 +17,7 @@
                     {% endif %}
                 </td>
                 <td>
-                    <h2>{{ ksiazka.tytul }}</h2>
+                    <h5>{{ ksiazka.tytul }}</h5>
                 </td>
                       <td>
                     <p>Autor: <br/>{{ ksiazka.autor}}</p>
@@ -39,25 +39,65 @@
                     </form>
                 </td>
                   <td>
-                    <p>Cena: <br/>{{ ksiazka.cena }} PLN</p>
+                    <p>Cena za sztukę: <br/>{{ ksiazka.cena }} PLN</p>
                 </td>
 
 
                 </tr>
+      {% endfor %}
 
-            {% endfor %}
         </table>
          </div>
          <div class="col-md-5 dalej">
         <p class="cena-koszyk">Do zapalaty: <br/> <span >{{ suma_cen }} PLN</span></p>
 
+<br/>
+    <br/>
+     <a id="pay-button" href="{% url 'podsumowanie' %}"
+                               class="btn btn-secondary">Przejdź do podsumowania</a>
+    </div>
+
+
+
+</div>
+        <br/>
+        <br/>
+    <h2>Polecane książki dla Ciebie</h2>
+<div id="karuzela">
+    <div class="karuzela-widok">
+        <div class="karuzela-tresc">
+            {% for ksiazka in rekomendacje %}
+            <div class="karuzela-element col-md-2">
+                <div class="card mb-2">
+                    <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">
+                        {% if ksiazka.okladka %}
+                        <img src="{{ ksiazka.okladka.url }}" class="card-img-top" alt="{{ ksiazka.tytul }} Okładka">
+                        {% endif %}
+                    </a>
+                    <div class="card-body">
+                        <div class="tytul-ksiazki">
+                        <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}" class="tytul">{{ ksiazka.tytul }}</a>
+                            </div>
+                        <p class="card-text">
+                            <a href="{% url 'ksiazki_wedlug_autora' slug=ksiazka.autor.slug %}">{{ ksiazka.autor.imie }} {{ ksiazka.autor.nazwisko }}</a>
+                        </p>
+                        <p class="card-text cena">{{ ksiazka.cena }} zł</p>
+                        <div class="przycisk-koszyk">
+                            <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-secondary">Dodaj do koszyka</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <button id="prev" onclick="przewinWLewo()">Poprzedni</button>
+    <button id="next" onclick="przewinWPrawo()">Następny</button>
+</div>
 
     {% else %}
         <p>Twój koszyk jest pusty.</p>
     {% endif %}
-
-
-
 <script>
 document.getElementById('pay-button').addEventListener('click', function() {
     fetch('/inicjuj_platnosc/', {
@@ -81,10 +121,46 @@ document.getElementById('pay-button').addEventListener('click', function() {
     });
 });
 </script>
-<br/>
-    <br/>
-     <a id="pay-button" href="{% url 'podsumowanie' %}"
-                               class="btn btn-secondary">Przejdź do podsumowania</a>
-    </div>
-</div>
+    <script>
+let indeksAktualny = 0;
+
+function przewinWPrawo() {
+    const tresc = document.querySelector('.karuzela-tresc');
+    const maksIndeks = tresc.children.length - 6;
+    if (indeksAktualny < maksIndeks) {
+        indeksAktualny++;
+        updateKaruzela();
+    }
+}
+
+function przewinWLewo() {
+    if (indeksAktualny > 0) {
+        indeksAktualny--;
+        updateKaruzela();
+    }
+}
+
+function updateKaruzela() {
+    const tresc = document.querySelector('.karuzela-tresc');
+    tresc.style.transform = `translateX(-${indeksAktualny * 310}px)`; // 210px to przykładowa szerokość elementu z marginesem
+}
+</script>
+        <script>
+window.onload = function() {
+    function equalizeCardHeights() {
+        var maxHeight = 0;
+        $('.card .tytul-ksiazki').each(function() {
+            var thisHeight = $(this).outerHeight();
+            if (thisHeight > maxHeight) {
+                maxHeight = thisHeight;
+            }
+        });
+        $('.card .tytul-ksiazki').height(maxHeight);
+    }
+
+    equalizeCardHeights();
+    $(window).resize(equalizeCardHeights);
+};
+</script>
+
 {% endblock %}

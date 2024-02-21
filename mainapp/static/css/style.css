@@ -118,7 +118,8 @@ header {
 }
 
 h1, h2, h3, h4, h5 p {
-    color: #3D3D3B !important;
+    color: #0a0a5c !important;
+
 }
 
 .card-img-top {
@@ -282,6 +283,6 @@ font-weight: bold;}
 
 .karuzela-element {
     flex: 0 0 auto;
-    width: 200px; /* Dostosuj szerokość do swoich potrzeb */
-    margin-right: 10px; /* Opcjonalnie, dla lepszego wyglądu */
+    width: 170px; /* Dostosuj szerokość do swoich potrzeb */
+    /*margin-right: 10px; !* Opcjonalnie, dla lepszego wyglądu *!*/
 }

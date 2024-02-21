@@ -1,6 +1,7 @@
 import json
 
 import stripe
+from django.contrib.sessions.models import Session
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Q
@@ -22,7 +23,7 @@ from .models import Ksiazka, Kategoria, Autor, Wydawnictwo, ProfilUzytkownika, Z
     PrzegladaneKsiazki
 from django.shortcuts import render, get_object_or_404
 from .forms import RejestracjaForm
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, get_user_model
 from django.contrib import messages
 from decimal import Decimal
 from django.views import View
@@ -32,8 +33,16 @@ from django.conf import settings
 from django.urls import reverse
 from django.contrib.auth.models import User
 
+
 def base(request):
-    return render(request,'base.html')
+    # Sprawdź, czy użytkownik jest zalogowany
+    if request.user.is_authenticated:
+        # Generuj rekomendacje tylko dla zalogowanych użytkowników
+        rekomendacje_ksiazek = generuj_rekomendacje(request.user)
+    else:
+        # Dla niezalogowanych użytkowników nie generuj rekomendacji
+        rekomendacje_ksiazek = None
+    return render(request,'base.html', {'rekomendacje': rekomendacje_ksiazek})
 
 
 
@@ -108,7 +117,12 @@ def usun_z_koszyka(request, ksiazka_id):
 def wyswietl_koszyk(request):
     koszyk = request.session.get('koszyk', {})
     suma_cen = Decimal(0.0)
-
+    if request.user.is_authenticated:
+        # Generuj rekomendacje tylko dla zalogowanych użytkowników
+        rekomendacje_ksiazek = generuj_rekomendacje(request.user)
+    else:
+        # Dla niezalogowanych użytkowników nie generuj rekomendacji
+        rekomendacje_ksiazek = None
     for ksiazka_id, ksiazka_info in koszyk.items():
         suma_cen += Decimal(ksiazka_info['ilosc']) * Decimal(ksiazka_info['cena'])
 
@@ -125,7 +139,7 @@ def wyswietl_koszyk(request):
 
         })
 
-    return render(request, 'wyswietl_koszyk.html', {'ksiazki_w_koszyku': ksiazki_w_koszyku, 'suma_cen': suma_cen})
+    return render(request, 'wyswietl_koszyk.html', {'ksiazki_w_koszyku': ksiazki_w_koszyku, 'suma_cen': suma_cen,'rekomendacje':rekomendacje_ksiazek})
 
 def rejestracja(request):
     if request.method == 'POST':
@@ -501,7 +515,8 @@ class SesjaStripe(View):
             success_url=settings.PAYMENT_SUCCESS_URL,
             cancel_url=settings.PAYMENT_CANCEL_URL,
             metadata={
-                'order_id': str(nowe_zamowienie.id)  # Przekazywanie identyfikatora zamówienia do metadanych sesji
+                'order_id': str(nowe_zamowienie.id),  # Przekazywanie identyfikatora zamówienia do metadanych sesji
+                'user_id': str(user.id)
             }
         )
 
@@ -515,7 +530,7 @@ class SesjaStripe(View):
                 cena=ksiazka_info['cena']
             )
 
-
+            request.session['koszyk'] = {}
 
         return redirect(checkout_session.url)
 
@@ -529,12 +544,10 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 @method_decorator(csrf_exempt, name="dispatch")
 class StripeWebhookView(View):
-
-
-    def post(self, request, format=None):
+    def post(self, request, *args, **kwargs):
         payload = request.body
+        sig_header = request.META['HTTP_STRIPE_SIGNATURE']
         endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
-        sig_header = request.META["HTTP_STRIPE_SIGNATURE"]
         event = None
 
         try:
@@ -545,20 +558,30 @@ class StripeWebhookView(View):
         except stripe.error.SignatureVerificationError as e:
             # Invalid signature
             return HttpResponse(status=400)
-        order_id = None
 
         if event['type'] == 'checkout.session.completed':
             session = event['data']['object']
             order_id = session.get('metadata', {}).get('order_id')
-        if order_id:
-            try:
-                zamowienie = Zamowienie.objects.get(id=order_id)
-                zamowienie.zaplacone = True
-                zamowienie.save()
-                user_id = session.get('metadata', {}).get('user_id')
+            user_id = session.get('metadata', {}).get('user_id')
 
-            except Zamowienie.DoesNotExist:
-                return HttpResponse(status=403)
+            if order_id:
+                try:
+                    zamowienie = Zamowienie.objects.get(id=order_id)
+                    zamowienie.zaplacone = True
+                    zamowienie.save()
+
+                    # Usuwanie koszyka z sesji użytkownika
+                    user_sessions = Session.objects.filter(session_data__contains=f'"_auth_user_id":"{user_id}"')
+                    for session in user_sessions:
+                        session_data = session.get_decoded()
+                        session_data.pop('koszyk', None)  # Usuń klucz 'koszyk'
+                        session.session_data = json.dumps(session_data)
+                        session.save()
+
+                    return HttpResponse(status=203)
+
+                except Zamowienie.DoesNotExist:
+                    return HttpResponse(status=403)
 
         return HttpResponse(status=201)
 
@@ -581,43 +604,35 @@ def historia_przegladanych_ksiazek(request):
 
 
 def generuj_rekomendacje(user):
-    # Pobranie kategorii z zamówień użytkownika
+    # Pobranie kategorii z zamówień użytkownika i przeglądanych książek
     zamowione_kategorie_ids = PozycjaZamowienia.objects.filter(
-        zamowienie__user=user,
-        zamowienie__zaplacone=True
+        zamowienie__user=user, zamowienie__zaplacone=True
     ).values_list('ksiazka__kategorie', flat=True)
+    przegladane_kategorie_ids = PrzegladaneKsiazki.objects.filter(user=user).values_list('ksiazka__kategorie', flat=True)
 
-    # Pobranie kategorii z przeglądanych książek
-    przegladane_kategorie_ids = PrzegladaneKsiazki.objects.filter(
-        user=user
-    ).values_list('ksiazka__kategorie', flat=True)
-
-    # Połączenie obu list i zliczenie wystąpień każdej kategorii
+    # Połączenie list i zliczenie wystąpień każdej kategorii
     wszystkie_kategorie_ids = list(zamowione_kategorie_ids) + list(przegladane_kategorie_ids)
-    najpopularniejsze_kategorie = Counter(wszystkie_kategorie_ids).most_common()
+    najpopularniejsze_kategorie = Counter(wszystkie_kategorie_ids).most_common(3)  # Ograniczenie do 3 kategorii
 
     ksiazki_do_rekomendacji = []
-    # Iteracja przez kategorie zaczynając od najpopularniejszej
+    # Iteracja przez 3 najpopularniejsze kategorie
     for kategoria_id, _ in najpopularniejsze_kategorie:
-        # Określenie liczby książek do pobrania na podstawie rangi kategorii
-        liczba_ksiazek = 4 if _ >= 4 else 2  # Dla najpopularniejszej kategorii bierzemy 5 książek, dla pozostałych 1
+        if len(ksiazki_do_rekomendacji) >= 10:
+            break  # Przerywamy pętlę, jeśli osiągnięto limit 10 książek
 
         # Znalezienie książek w danej kategorii, które użytkownik jeszcze nie przeglądał ani nie zamówił
-        ksiazki_w_kategorii = Ksiazka.objects.filter(
-            kategorie=kategoria_id
-        ).exclude(
-            Q(id__in=PozycjaZamowienia.objects.filter(zamowienie__user=user).values_list('ksiazka', flat=True)) |
-            Q(id__in=PrzegladaneKsiazki.objects.filter(user=user).values_list('ksiazka', flat=True))
-        ).distinct()[:liczba_ksiazek]
+        ksiazki_w_kategorii = Ksiazka.objects.filter(kategorie=kategoria_id).exclude(
+            Q(id__in=PozycjaZamowienia.objects.filter(zamowienie__user=user).values_list('ksiazka_id', flat=True)) |
+            Q(id__in=PrzegladaneKsiazki.objects.filter(user=user).values_list('ksiazka_id', flat=True))
+        ).distinct()[:max(0, 10 - len(ksiazki_do_rekomendacji))]  # Dopełnienie do 10 książek
 
         ksiazki_do_rekomendacji.extend(ksiazki_w_kategorii)
 
-        # Jeśli zebraliśmy już 10 książek, przerywamy pętlę
-        if len(ksiazki_do_rekomendacji) >= 10:
-            break
-
-    # Ograniczenie listy do 10 książek, jeśli zostało zebranych więcej
+    # Ograniczenie listy do 10 książek
     return ksiazki_do_rekomendacji[:10]
+
+
+
 
 
 @login_required
