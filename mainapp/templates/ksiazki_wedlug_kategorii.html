@@ -6,7 +6,7 @@
 
 {% block content %}
     <div class="container">
-        <h1>Książki w Kategorii: {{ kategoria.nazwa }}</h1>
+        <h1>Książki kategorii: {{ kategoria.nazwa }}</h1>
         <div class="row">
             {% for ksiazka in ksiazki %}
                  {% with autor=ksiazka.autor wydawnictwo=ksiazka.wydawnictwo kategoria=ksiazka.kategorie%}

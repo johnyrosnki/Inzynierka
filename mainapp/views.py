@@ -238,6 +238,7 @@ class WyszukiwarkaView(View):
         ksiazki = Ksiazka.objects.filter(tytul__icontains=query)
         autorzy = Autor.objects.filter(Q(imie__icontains=query) | Q(nazwisko__icontains=query))
         wydawnictwa = Wydawnictwo.objects.filter(nazwa__icontains=query)
+        kategoria = Kategoria.objects.filter(nazwa__icontains=query)
 
         results = []
         for ksiazka in ksiazki:
@@ -248,6 +249,9 @@ class WyszukiwarkaView(View):
 
         for wydawnictwo in wydawnictwa:
             results.append({'label': wydawnictwo.nazwa, 'url': wydawnictwo.get_absolute_url()})
+
+        for kategorie in kategoria:
+            results.append({'label': kategorie.nazwa, 'url': kategorie.get_absolute_url()})
 
         return results
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -603,35 +607,61 @@ def historia_przegladanych_ksiazek(request):
     return render(request, 'historia_przegladanych_ksiazek.html', {'przegladane_ksiazki': przegladane_ksiazki})
 
 
+from collections import Counter
+from django.db.models import Q
+
+from django.db.models import Q
+from collections import Counter
+from itertools import chain
+
+
 def generuj_rekomendacje(user):
-    # Pobranie kategorii z zamówień użytkownika i przeglądanych książek
-    zamowione_kategorie_ids = PozycjaZamowienia.objects.filter(
+    # Pobranie zamówionych i przeglądanych książek
+    zamowione_ksiazki = PozycjaZamowienia.objects.filter(
         zamowienie__user=user, zamowienie__zaplacone=True
-    ).values_list('ksiazka__kategorie', flat=True)
-    przegladane_kategorie_ids = PrzegladaneKsiazki.objects.filter(user=user).values_list('ksiazka__kategorie', flat=True)
+    ).select_related('ksiazka').values_list('ksiazka__id', 'ksiazka__autor', 'ksiazka__kategorie')
 
-    # Połączenie list i zliczenie wystąpień każdej kategorii
-    wszystkie_kategorie_ids = list(zamowione_kategorie_ids) + list(przegladane_kategorie_ids)
-    najpopularniejsze_kategorie = Counter(wszystkie_kategorie_ids).most_common(3)  # Ograniczenie do 3 kategorii
+    przegladane_ksiazki = PrzegladaneKsiazki.objects.filter(user=user).select_related('ksiazka').values_list(
+        'ksiazka__id', 'ksiazka__autor', 'ksiazka__kategorie')
 
+    # Łączenie informacji o zamówionych i przeglądanych książkach
+    wszystkie_ksiazki = list(chain(zamowione_ksiazki, przegladane_ksiazki))
+
+    # Pobieranie ID książek, które użytkownik już zna (zamówione lub przeglądane)
+    znane_ksiazki_ids = {ksiazka_id for ksiazka_id, _, _ in wszystkie_ksiazki}
+
+    # Wybieranie książek tego samego autora i kategorii
+    autor_i_kategoria_counter = Counter((autor, kategoria) for _, autor, kategoria in wszystkie_ksiazki)
     ksiazki_do_rekomendacji = []
-    # Iteracja przez 3 najpopularniejsze kategorie
-    for kategoria_id, _ in najpopularniejsze_kategorie:
+
+    for (autor, kategoria), _ in autor_i_kategoria_counter.most_common():
         if len(ksiazki_do_rekomendacji) >= 10:
-            break  # Przerywamy pętlę, jeśli osiągnięto limit 10 książek
+            break
+        potencjalne_ksiazki = Ksiazka.objects.filter(
+            autor=autor, kategorie=kategoria
+        ).exclude(id__in=znane_ksiazki_ids).distinct()
 
-        # Znalezienie książek w danej kategorii, które użytkownik jeszcze nie przeglądał ani nie zamówił
-        ksiazki_w_kategorii = Ksiazka.objects.filter(kategorie=kategoria_id).exclude(
-            Q(id__in=PozycjaZamowienia.objects.filter(zamowienie__user=user).values_list('ksiazka_id', flat=True)) |
-            Q(id__in=PrzegladaneKsiazki.objects.filter(user=user).values_list('ksiazka_id', flat=True))
-        ).distinct()[:max(0, 10 - len(ksiazki_do_rekomendacji))]  # Dopełnienie do 10 książek
+        for ksiazka in potencjalne_ksiazki:
+            if len(ksiazki_do_rekomendacji) < 10:
+                ksiazki_do_rekomendacji.append(ksiazka)
+                znane_ksiazki_ids.add(ksiazka.id)
 
-        ksiazki_do_rekomendacji.extend(ksiazki_w_kategorii)
+    # Jeżeli potrzebujemy więcej książek, szukamy w najpopularniejszych kategoriach
+    if len(ksiazki_do_rekomendacji) < 10:
+        kategoria_counter = Counter(kategoria for _, _, kategoria in wszystkie_ksiazki)
+        for kategoria, _ in kategoria_counter.most_common():
+            if len(ksiazki_do_rekomendacji) >= 10:
+                break
+            potencjalne_ksiazki = Ksiazka.objects.filter(
+                kategorie=kategoria
+            ).exclude(id__in=znane_ksiazki_ids).distinct()
 
-    # Ograniczenie listy do 10 książek
+            for ksiazka in potencjalne_ksiazki:
+                if len(ksiazki_do_rekomendacji) < 10:
+                    ksiazki_do_rekomendacji.append(ksiazka)
+                    znane_ksiazki_ids.add(ksiazka.id)
+
     return ksiazki_do_rekomendacji[:10]
-
-
 
 
 

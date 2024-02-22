@@ -85,6 +85,7 @@
 
 <h1>Witaj w księgarni internetowej!</h1>
         <br/>
+        <p>Wyszukaj książki, autorów, kategorie literackie używając wyszukiwarki na górze strony</p>
         <br/>
         <br/>
           {% if user.is_authenticated %}
@@ -243,6 +244,7 @@ window.onload = function() {
                 var url = '/wydawnictwo_szczegoly/' + nazwa + '/';
                 window.location.href = url;
             }
+
         });
     }
 
