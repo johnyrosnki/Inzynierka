@@ -26,8 +26,8 @@ class WydawnictwoAdmin(admin.ModelAdmin):
     exclude = ('slug',)
 admin.site.register(Wydawnictwo,WydawnictwoAdmin)
 class KsiazkaAdmin(admin.ModelAdmin):
-    list_display = ('tytul', 'cena', 'autor', 'opis', 'okladka','wydawnictwo')
-    search_fields = ['tytul', 'autor__imie', 'autor__nazwisko','wydawnictwo']
+    list_display = ('tytul', 'cena', 'autor', 'opis', 'okladka','wydawnictwo','typ_okladki', 'rok_wydania')
+    search_fields = ['tytul', 'autor__imie', 'autor__nazwisko','wydawnictwo','typ_okladki', 'rok_wydania']
     filter_horizontal = ('kategorie',)
     repopulated_fields = {'slug': ('tytul',)}
     exclude = ('slug',)
@@ -43,18 +43,21 @@ admin.site.register(User, UserAdmin)
 
 
 
-@admin.register(PozycjaZamowienia)
-class PozycjaZamowieniaAdmin(admin.ModelAdmin):
-    list_display = ['zamowienie', 'ilosc',  'cena']
-    list_filter = ['zamowienie']
-    search_fields = ['zamowienie__id', 'tytul', 'autor']
 
+
+class PozycjaZamowieniaInline(admin.TabularInline):
+    model = PozycjaZamowienia
+    extra = 0  # Domyślna liczba formularzy
 
 @admin.register(Zamowienie)
 class ZamowienieAdmin(admin.ModelAdmin):
-    list_display = ['user', 'zaplacone','adres','kod_pocztowy','miasto','wojewodztwo']
-    list_filter = ['zaplacone','adres']
+    list_display = ['user', 'zaplacone', 'adres', 'kod_pocztowy', 'miasto', 'wojewodztwo','wyslano']
+    list_filter = ['zaplacone', 'adres','wyslano']
     search_fields = ['user__username']
+    inlines = [PozycjaZamowieniaInline]
+    def tytul_ksiazki(self, obj):
+        return obj.ksiazka.tytul
+    tytul_ksiazki.short_description = "Tytuł książki"
 
 
 

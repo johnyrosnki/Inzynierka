@@ -15,10 +15,10 @@ from PIL import Image, ImageOps
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, FormView
 from collections import Counter
 
-from .forms import KsiazkaForm, UserEditForm, ProfilUzytkownikaForm
+from .forms import KsiazkaForm, UserEditForm, ProfilUzytkownikaForm, ZaawansowaneWyszukiwanieForm
 from .models import Ksiazka, Kategoria, Autor, Wydawnictwo, ProfilUzytkownika, Zamowienie, PozycjaZamowienia, \
     PrzegladaneKsiazki
 from django.shortcuts import render, get_object_or_404
@@ -99,7 +99,7 @@ def dodaj_do_koszyka(request, ksiazka_id):
         }
 
     request.session['koszyk'] = json.loads(json.dumps(koszyk, default=str))  # Konwersja Decimal do str przed zapisaniem do sesji
-    print(request.session['koszyk'])
+    # print(request.session['koszyk'])
     return redirect('lista_ksiazek')
 # views.py
 from django.shortcuts import render
@@ -256,9 +256,6 @@ class WyszukiwarkaView(View):
         return results
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-
-
-stripe.api_key = settings.STRIPE_SECRET_KEY
 def inicjuj_platnosc(request):
     try:
         koszyk = request.session.get('koszyk', {})
@@ -669,3 +666,26 @@ def generuj_rekomendacje(user):
 def rekomendacje(request):
     rekomendacje_ksiazek = generuj_rekomendacje(request.user)
     return render(request, 'rekomendacje.html', {'rekomendacje': rekomendacje_ksiazek})
+
+
+def zaawansowane_wyszukiwanie(request):
+    form = ZaawansowaneWyszukiwanieForm(request.GET or None)
+    results = []
+
+    if form.is_valid():
+        cleaned_data = form.cleaned_data
+        qs = Ksiazka.objects.all()
+
+        if cleaned_data.get('rok_wydania_od'):
+            qs = qs.filter(rok_wydania__gte=cleaned_data['rok_wydania_od'])
+
+        if cleaned_data.get('cena_od'):
+            qs = qs.filter(cena__gte=cleaned_data['cena_od'])
+        if cleaned_data.get('cena_do'):
+            qs = qs.filter(cena__lte=cleaned_data['cena_do'])
+        if cleaned_data.get('typ_okladki') and cleaned_data['typ_okladki'] != '':
+            qs = qs.filter(typ_okladki=cleaned_data['typ_okladki'])
+
+        results = qs
+
+    return render(request, 'zaawansowane_wyszukiwanie.html', {'form': form, 'results': results})

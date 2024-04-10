@@ -27,8 +27,13 @@ class Kategoria(models.Model):
     def get_absolute_url(self):
         return reverse('ksiazki_wedlug_kategorii', args=[self.slug])
 
+    class Meta:
+        verbose_name = "Kategoria"
+        verbose_name_plural = "Kategorie"
+
     def __str__(self):
         return self.nazwa
+
 class Autor(models.Model):
     imie = models.CharField(max_length=100)
     nazwisko = models.CharField(max_length=100)
@@ -41,6 +46,10 @@ class Autor(models.Model):
 
     def get_absolute_url(self):
         return reverse('ksiazki_wedlug_autora', args=[self.slug])
+
+    class Meta:
+        verbose_name = "Autor"
+        verbose_name_plural = "Autorzy"
 
     def __str__(self):
         return f"{self.imie} {self.nazwisko}"
@@ -56,6 +65,10 @@ class Wydawnictwo(models.Model):
 
     def get_absolute_url(self):
         return reverse('wydawnictwo_szczegoly', args=[self.slug])
+
+    class Meta:
+        verbose_name = "Wydawnictwo"
+        verbose_name_plural = "Wydawnictwa"
     def __str__(self):
         return self.nazwa
 
@@ -68,17 +81,42 @@ class Ksiazka(models.Model):
     okladka = models.ImageField(upload_to='okladki/', null=True, blank=True)
     kategorie = models.ManyToManyField(Kategoria)
     cena = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
-    data_utworzenia = models.DateTimeField(default=timezone.now, verbose_name="Data utworzenia")
+    rok_wydania = models.IntegerField(null=True, blank=True, verbose_name="Rok wydania")
     wydawnictwo = models.ForeignKey(Wydawnictwo, on_delete=models.CASCADE)
+    typ_okladki = models
     slug = models.SlugField(unique=True, blank=True)
+
+    TYP_OKLADKI_CHOICES = (
+        ('twarda', 'Twarda'),
+        ('miekką', 'Miękka'),
+    )
+    typ_okladki = models.CharField(max_length=10, choices=TYP_OKLADKI_CHOICES, default='miekką',
+                                   verbose_name="Typ okładki")
+
+    DOSTEPNOSC_CHOICES = (
+        ('dostępna', 'Dostępna'),
+        ('niedostępna', 'Niedostępna'),
+
+    )
+    dostepnosc = models.CharField(max_length=15, choices=DOSTEPNOSC_CHOICES, default='dostępna',
+                                  verbose_name="Dostępność")
+
+
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.tytul)
         super().save(*args, **kwargs)
 
+    class Meta:
+            verbose_name = "Ksiażka"
+            verbose_name_plural = "Książki"
+
     def get_absolute_url(self):
 
         return reverse('ksiazka_szczegoly', args=[str(self.slug)])
+
+    def __str__(self):
+        return self.tytul
 
 
 @receiver(pre_save, sender=Ksiazka)
@@ -153,6 +191,8 @@ class Zamowienie(models.Model):
     kod_pocztowy = models.CharField(max_length=10, verbose_name="Kod pocztowy",default="111")
     miasto = models.CharField(max_length=100, verbose_name="Miasto",default="nazwa")
     wojewodztwo = models.CharField(max_length=100, verbose_name="Województwo",default="nazwa")
+    wyslano = models.BooleanField(default=False, verbose_name='Wysłano książki')
+
 
 
     def __str__(self):

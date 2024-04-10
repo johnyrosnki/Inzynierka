@@ -30,3 +30,11 @@ class ProfilUzytkownikaForm(forms.ModelForm):
         model = ProfilUzytkownika
         fields = ['adres', 'kod_pocztowy', 'miasto', 'wojewodztwo']
 
+class ZaawansowaneWyszukiwanieForm(forms.Form):
+    # Definicja pól formularza
+
+    cena_od = forms.DecimalField(required=False, label='Cena od')
+    cena_do = forms.DecimalField(required=False, label='Cena do')
+    rok_wydania_od = forms.IntegerField(required=False, label='Rok wydania od', min_value=1850, max_value=2024)
+    typ_okladki = forms.ChoiceField(choices=Ksiazka.TYP_OKLADKI_CHOICES, required=False, label='Typ okładki')
+

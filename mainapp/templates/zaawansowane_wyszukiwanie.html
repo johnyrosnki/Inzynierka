@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Zaawansowane wyszukiwanie</h2>
+<form method="get">
+  {{ form.as_p }}
+  <button type="submit">Szukaj</button>
+</form>
+
+{% if results %}
+  <h3>Wyniki wyszukiwania:</h3>
+  <ul>
+    {% for ksiazka in results %}
+      <li>
+        <a href="{{ ksiazka.get_absolute_url }}">{{ ksiazka.tytul }}</a> - {{ ksiazka.cena }} zł
+        <!-- Możesz dodać więcej informacji o książce tutaj -->
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+{% endblock %}
