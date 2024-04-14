@@ -1,21 +1,79 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
+{% block title %}Zaawansowane wyszukiwanie{% endblock %}
 
 {% block content %}
-<h2>Zaawansowane wyszukiwanie</h2>
-<form method="get">
-  {{ form.as_p }}
-  <button type="submit">Szukaj</button>
-</form>
+<div class="container">
+<div class="wyszukiwanie">
+    <h1>Zaawansowane opcje wyszukiwania książek</h1>
+    <div class="col-md-6 offset-md-3 logowanie">
+    <!-- Wyświetlanie formularza zaawansowanego wyszukiwania -->
+    <form class="col-md-8 offset-md-2 formularz" method="get">
+        {{ form.as_p }}
+        <button type="submit">Szukaj</button>
+    </form>
+    </div>
+</div>
 
-{% if results %}
-  <h3>Wyniki wyszukiwania:</h3>
-  <ul>
-    {% for ksiazka in results %}
-      <li>
-        <a href="{{ ksiazka.get_absolute_url }}">{{ ksiazka.tytul }}</a> - {{ ksiazka.cena }} zł
-        <!-- Możesz dodać więcej informacji o książce tutaj -->
-      </li>
-    {% endfor %}
-  </ul>
-{% endif %}
+    <!-- Wyświetlanie błędów formularza, jeśli wystąpiły -->
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Wystąpiły błędy w formularzu:</strong>
+            {{ form.non_field_errors }}
+            {% for field in form %}
+                {% if field.errors %}
+                    {{ field.errors }}
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Wyświetlanie wyników wyszukiwania -->
+    {% if results %}
+        <h2>Wyniki wyszukiwania:</h2>
+        <br/>
+        <div class="row">
+            {% for ksiazka in results %}
+                {% with autor=ksiazka.autor wydawnictwo=ksiazka.wydawnictwo kategoria=ksiazka.kategorie %}
+                <div class="col-md-2">
+                        <div class="card mb-2">
+                            <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">
+                                {% if ksiazka.okladka %}
+
+                                    <img src="{{ ksiazka.okladka.url }}" class="card-img-top"
+                                         alt="{{ ksiazka.tytul }} Okładka">
+
+                                {% else %}
+                                {% endif %}
+                            </a>
+                            <div class="card-body">
+                                <div class="tytul-ksiazki">
+                                <a class="tytul"
+                                   href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">{{ ksiazka.tytul }} </a>
+</div>
+                                <p class="card-text">
+
+
+                                    <a href="{% url 'ksiazki_wedlug_autora' slug=autor.slug %}">{{ autor.imie }} {{ autor.nazwisko }}</a>
+
+                                </p>
+
+                                <p class="card-text cena">{{ ksiazka.cena }} zł</p>
+
+                                <div class="przycisk-koszyk">
+                                    <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-secondary">Dodaj do
+                                        koszyka</a>
+
+                                </div>
+                            </div>
+
+                        </div>
+                </div>
+                 {% endwith %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>Nie znaleziono książek spełniających kryteria wyszukiwania.</p>
+    {% endif %}
+</div>
 {% endblock %}

@@ -42,6 +42,9 @@ urlpatterns = [
                   path('historia_przegladanych_ksiazek/', views.historia_przegladanych_ksiazek, name='historia_przegladanych_ksiazek'),
                   path('rekomendacje/', views.rekomendacje, name='rekomendacje'),
                   path('zaawansowane_wyszukiwanie/', views.zaawansowane_wyszukiwanie, name='zaawansowane_wyszukiwanie'),
+                  path('sprzedane-ksiazki/', views.wszystkie_sprzedane_ksiazki, name='sprzedane-ksiazki'),
+
+
 
 
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

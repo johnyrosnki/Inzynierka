@@ -286,3 +286,11 @@ font-weight: bold;}
     width: 170px; /* Dostosuj szerokość do swoich potrzeb */
     /*margin-right: 10px; !* Opcjonalnie, dla lepszego wyglądu *!*/
 }
+.wyszukiwanie .logowanie {min-height: 700px !important;}
+select{
+    border-radius: 10px;
+    width: 190px;
+    padding: 4px;
+}
+.wyszukiwarka .nav-link{display: inline;
+margin-left: 10px;}

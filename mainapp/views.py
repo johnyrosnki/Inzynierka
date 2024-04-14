@@ -4,7 +4,7 @@ import stripe
 from django.contrib.sessions.models import Session
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import Q
+from django.db.models import Q, Sum, Count
 from django.shortcuts import render
 from django.utils import timezone
 # Create your views here.
@@ -30,19 +30,15 @@ from django.views import View
 import json
 from django.http import JsonResponse
 from django.conf import settings
+from itertools import chain
 from django.urls import reverse
 from django.contrib.auth.models import User
 
 
 def base(request):
-    # Sprawdź, czy użytkownik jest zalogowany
-    if request.user.is_authenticated:
-        # Generuj rekomendacje tylko dla zalogowanych użytkowników
-        rekomendacje_ksiazek = generuj_rekomendacje(request.user)
-    else:
-        # Dla niezalogowanych użytkowników nie generuj rekomendacji
-        rekomendacje_ksiazek = None
-    return render(request,'base.html', {'rekomendacje': rekomendacje_ksiazek})
+    rekomendacje = rekomendacje_zakupy()
+
+    return render(request, 'base.html', {'rekomendacje': rekomendacje})
 
 
 
@@ -153,16 +149,18 @@ def rejestracja(request):
     return render(request, 'rejestracja.html', {'form': form})
 
 def logowanie(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-
-        if user is not None:
-            login(request, user)
-            return redirect('lista_ksiazek')  # Przekieruj na stronę główną po udanym logowaniu
+    def logowanie_view(request):
+        if request.method == 'POST':
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('lista_ksiazek')  # Nazwa URL do przekierowania
+            else:
+                return render(request, 'login.html', {'error': 'Błędne dane logowania.'})
         else:
-            messages.error(request, 'Błędne dane logowania.')
+            return render(request, 'login.html')
 
     return render(request, 'logowanie.html')
 
@@ -604,12 +602,6 @@ def historia_przegladanych_ksiazek(request):
     return render(request, 'historia_przegladanych_ksiazek.html', {'przegladane_ksiazki': przegladane_ksiazki})
 
 
-from collections import Counter
-from django.db.models import Q
-
-from django.db.models import Q
-from collections import Counter
-from itertools import chain
 
 
 def generuj_rekomendacje(user):
@@ -676,16 +668,72 @@ def zaawansowane_wyszukiwanie(request):
         cleaned_data = form.cleaned_data
         qs = Ksiazka.objects.all()
 
+        # Filtracja po roku wydania
         if cleaned_data.get('rok_wydania_od'):
             qs = qs.filter(rok_wydania__gte=cleaned_data['rok_wydania_od'])
 
+        # Filtracja po cenie
         if cleaned_data.get('cena_od'):
             qs = qs.filter(cena__gte=cleaned_data['cena_od'])
         if cleaned_data.get('cena_do'):
             qs = qs.filter(cena__lte=cleaned_data['cena_do'])
+
+        # Filtracja po typie okładki
         if cleaned_data.get('typ_okladki') and cleaned_data['typ_okladki'] != '':
             qs = qs.filter(typ_okladki=cleaned_data['typ_okladki'])
+
+        if cleaned_data.get('autor'):
+            # Rozdziel wpisane dane na imię i nazwisko
+            autor_parts = cleaned_data['autor'].split()
+            if len(autor_parts) == 1:
+                # Jeśli użytkownik wpisał tylko jedno słowo, szukaj w imionach i nazwiskach
+                qs = qs.filter(Q(autor__imie__icontains=autor_parts[0]) | Q(autor__nazwisko__icontains=autor_parts[0]))
+            elif len(autor_parts) > 1:
+                # Załóżmy, że wpisano imię i nazwisko
+                qs = qs.filter(autor__imie__icontains=autor_parts[0], autor__nazwisko__icontains=autor_parts[1])
+
+            # Filtracja po kategorii
+        if cleaned_data.get('kategoria'):
+            qs = qs.filter(kategorie__nazwa__icontains=cleaned_data['kategoria'])
+
+            # Filtracja po wydawnictwie
+        if cleaned_data.get('wydawnictwo'):
+            qs = qs.filter(wydawnictwo__nazwa__icontains=cleaned_data['wydawnictwo'])
+
 
         results = qs
 
     return render(request, 'zaawansowane_wyszukiwanie.html', {'form': form, 'results': results})
+
+
+def rekomendacje_zakupy():
+    # Pobieranie 10 najczęściej kupowanych książek, już posortowanych
+
+    najpopularniejsze_ksiazki = PozycjaZamowienia.objects.filter(
+        zamowienie__zaplacone=True
+    ).values(
+        'ksiazka', 'ksiazka__tytul', 'ksiazka__slug', 'ksiazka__okladka', 'ksiazka__cena', 'ksiazka__id'
+        # Uwzględnienie ceny
+    ).annotate(
+        total=Count('ksiazka')
+    ).order_by('-total')[:10]
+
+    for ksiazka in najpopularniejsze_ksiazki:
+        if ksiazka['ksiazka__okladka']:
+            ksiazka['okladka_url'] = settings.MEDIA_URL + str(ksiazka['ksiazka__okladka'])
+        ksiazka['cena'] = ksiazka['ksiazka__cena']
+
+    return list(najpopularniejsze_ksiazki)
+
+
+
+def wszystkie_sprzedane_ksiazki(request):
+    sprzedane_ksiazki = PozycjaZamowienia.objects.filter(
+        zamowienie__zaplacone=True
+    ).values(
+        'ksiazka__tytul', 'ksiazka__autor', 'ksiazka__id'
+    ).annotate(
+        ilosc_sprzedanych=Count('id')
+    ).order_by('-ilosc_sprzedanych')
+
+    return render(request, 'sprzedane_ksiazki.html', {'sprzedane_ksiazki': sprzedane_ksiazki})

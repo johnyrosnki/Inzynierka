@@ -23,8 +23,11 @@
 
             <div class="wyszukiwarka col-md-6">
                 <input type="text" id="searchInput" placeholder="Tytuł książki lub imię i nazwisko autora">
+                <a class="nav-link" href="{% url 'zaawansowane_wyszukiwanie' %}" >Zaawansowane wyszukiwanie</a>
                 <div id="searchResults"></div>
+
             </div>
+
 
             <div class="collapse navbar-collapse col-md-4 info-koszyk" id="navbarNav">
                 <ul class="navbar-nav ">
@@ -85,32 +88,30 @@
 
 <h1>Witaj w księgarni internetowej!</h1>
         <br/>
-        <p>Wyszukaj książki, autorów, kategorie literackie używając wyszukiwarki na górze strony</p>
+        <p>Wyszukaj książki, autorów, kategorie literackie oraz wydawnictwa używając wyszukiwarki na górze strony</p>
         <br/>
         <br/>
           {% if user.is_authenticated %}
-        <h2>Polecane książki dla Ciebie: </h2>
-    <div id="karuzela">
-        <div class="karuzela-widok">
+    <h2>Najczęściej kupowane książki przez innych użytkowników: </h2>
+<div id="karuzela">
+    <div class="karuzela-widok">
         <div class="karuzela-tresc">
             {% for ksiazka in rekomendacje %}
             <div class="karuzela-element col-md-2">
                 <div class="card mb-2">
-                    <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}">
-                        {% if ksiazka.okladka %}
-                        <img src="{{ ksiazka.okladka.url }}" class="card-img-top" alt="{{ ksiazka.tytul }} Okładka">
+                    <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.ksiazka__slug %}">
+                        {% if ksiazka.ksiazka__okladka %}
+                       <img src="{{ ksiazka.okladka_url }}" class="card-img-top" alt="{{ ksiazka.ksiazka__tytul }} Okładka">
                         {% endif %}
                     </a>
                     <div class="card-body">
                         <div class="tytul-ksiazki">
-                        <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}" class="tytul">{{ ksiazka.tytul }}</a>
-                            </div>
-                        <p class="card-text">
-                            <a href="{% url 'ksiazki_wedlug_autora' slug=ksiazka.autor.slug %}">{{ ksiazka.autor.imie }} {{ ksiazka.autor.nazwisko }}</a>
-                        </p>
+                            <a class="tytul" href="{% url 'ksiazka_szczegoly' slug=ksiazka.ksiazka__slug %}">{{ ksiazka.ksiazka__tytul }}</a>
+                        </div>
                         <p class="card-text cena">{{ ksiazka.cena }} zł</p>
+
                         <div class="przycisk-koszyk">
-                            <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-secondary">Dodaj do koszyka</a>
+                                <a href="{% url 'dodaj_do_koszyka' ksiazka.ksiazka__id %}" class="btn btn-secondary">Dodaj do koszyka</a>
                         </div>
                     </div>
                 </div>
@@ -121,6 +122,7 @@
     <button id="prev" onclick="przewinWLewo()">Poprzedni</button>
     <button id="next" onclick="przewinWPrawo()">Następny</button>
 </div>
+    </div>
               {% else %}
 <p></p>
 {% endif %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Wszystkie sprzedane książki:</h2>
+<ul>
+    {% for ksiazka in sprzedane_ksiazki %}
+        <li>
+            {{ ksiazka.ksiazka__tytul }}- Sprzedanych kopii: {{ ksiazka.ilosc_sprzedanych }}
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

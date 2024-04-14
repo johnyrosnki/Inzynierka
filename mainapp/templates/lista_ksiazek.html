@@ -35,23 +35,9 @@
                                     <a href="{% url 'ksiazki_wedlug_autora' slug=autor.slug %}">{{ autor.imie }} {{ autor.nazwisko }}</a>
 
                                 </p>
-                                {#                                <p class="card-text">{{ ksiazka.opis }}</p>#}
 
-                                {#                                <p class="card-text">Kategorie: {% for kategoria in ksiazka.kategorie.all %}#}
-                                {#                                    <a href="{% url 'ksiazki_wedlug_kategorii' kategoria.id %}">{{ kategoria.nazwa }}</a>#}
-                                {#                                    {% if not forloop.last %}, {% endif %}</p>#}
-                                {##}
-                                {#                                    <p></p>#}
-                                {#                                {% endfor %}#}
                                 <p class="card-text cena">{{ ksiazka.cena }} zł</p>
-                                {#                                <p class="card-text">{{ ksiazka.data_utworzenia }}</p>#}
-                                {#                                <p class="card-text">#}
-                                {#                                    <a href="#}
-                                {#                                       {% url 'wydawnictwo_szczegoly' slug=wydawnictwo.slug %}">{{ ksiazka.wydawnictwo }}#}
-                                {#                                    </a>#}
-                                {##}
-                                {##}
-                                {#                                </p>#}
+
                                 <div class="przycisk-koszyk">
                                     <a href="{% url 'dodaj_do_koszyka' ksiazka.id %}" class="btn btn-secondary">Dodaj do
                                         koszyka</a>
@@ -60,10 +46,7 @@
                             </div>
 
                         </div>
-                        {#                        {% if ksiazka.slug %}#}
-                        {#                            <a href="{% url 'ksiazka_szczegoly' slug=ksiazka.slug %}"#}
-                        {#                               class="btn btn-secondary">Szczegóły</a>#}
-                        {#                        {% endif %}#}
+
                     </div>
                 {% endwith %}
             {% endfor %}

@@ -83,14 +83,14 @@ class Ksiazka(models.Model):
     cena = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
     rok_wydania = models.IntegerField(null=True, blank=True, verbose_name="Rok wydania")
     wydawnictwo = models.ForeignKey(Wydawnictwo, on_delete=models.CASCADE)
-    typ_okladki = models
+
     slug = models.SlugField(unique=True, blank=True)
 
     TYP_OKLADKI_CHOICES = (
         ('twarda', 'Twarda'),
         ('miekką', 'Miękka'),
     )
-    typ_okladki = models.CharField(max_length=10, choices=TYP_OKLADKI_CHOICES, default='miekką',
+    typ_okladki = models.CharField(max_length=10, choices=TYP_OKLADKI_CHOICES, blank=True, null=True,
                                    verbose_name="Typ okładki")
 
     DOSTEPNOSC_CHOICES = (
