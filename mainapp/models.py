@@ -29,7 +29,7 @@ class Kategoria(models.Model):
 
     class Meta:
         verbose_name = "Kategoria"
-        verbose_name_plural = "Kategorie"
+        verbose_name_plural = "gorie"
 
     def __str__(self):
         return self.nazwa
@@ -135,20 +135,20 @@ def lista_ksiazek(request):
 def dodaj_do_koszyka(request, ksiazka_id):
     ksiazka = Ksiazka.objects.get(pk=ksiazka_id)
 
-    # Sprawdź, czy sesja koszyka już istnieje, jeśli nie, utwórz pusty koszyk
+
     if 'koszyk' not in request.session:
         request.session['koszyk'] = {}
 
     koszyk = request.session['koszyk']
 
 
-    # Dodaj książkę do koszyka lub zwiększ liczbę, jeśli już tam jest
+
     if ksiazka_id in koszyk:
         koszyk[ksiazka_id]['ilosc'] += 1
     else:
         koszyk[ksiazka_id] = {'tytul': ksiazka.tytul, 'ilosc': 1}
 
-    # Zapisz zmiany w sesji
+
     request.session['koszyk'] = koszyk
 
     return redirect('lista_ksiazek')
@@ -169,7 +169,7 @@ class Zakladka(models.Model):
 
 def dodaj_zakladke_po_dodaniu_ksiazki(sender, instance, created, **kwargs):
     if created:
-        # Jeśli nowa książka została utworzona, dodaj zakładkę
+
         Zakladka.objects.create( ksiazka=instance)
 
 

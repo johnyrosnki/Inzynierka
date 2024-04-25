@@ -29,26 +29,6 @@ $(document).ready(function() {
         });
     }
 });
-function obslugaPodpowiedzi() {
-    // Twoja istniejąca funkcja obsługująca podpowiedzi
 
-    // Dodaj obsługę zdarzenia kliknięcia na podpowiedzi
-    $('#id_podpowiedzi').on('click', 'li', function() {
-        var imie = $(this).data('imie');
-        var tytul = $(this).data('tytul');
-        var rodzaj = $(this).data('rodzaj');
 
-        if (rodzaj === 'autor') {
-            // Przejdź do strony z listą książek danego autora
-            var url = '/ksiazki_wedlug_autora/' + imie + '/';
-            window.location.href = url;
-        } else if (rodzaj === 'tytul') {
-            // Przejdź do strony ze szczegółami danej książki
-            var url = '/ksiazka_szczegoly/' + tytul + '/';
-            window.location.href = url;
-        }
-    });
-}
-
-// Wywołanie funkcji
 

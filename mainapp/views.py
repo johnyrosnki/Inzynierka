@@ -47,7 +47,7 @@ def dodaj_ksiazke(request):
         form = KsiazkaForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('lista_ksiazek')  # Dodaj odpowiednią nazwę widoku
+            return redirect('lista_ksiazek')
     else:
         form = KsiazkaForm()
     return render(request, 'dodaj_ksiazke.html', {'form': form})
@@ -56,20 +56,16 @@ def lista_ksiazek(request):
     ksiazki = Ksiazka.objects.all()
     for ksiazka in ksiazki:
         if ksiazka.okladka:
-            # Przetwarzanie obrazu, ustawianie stałego rozmiaru (na przykład 300x300 pikseli)
             image_path = ksiazka.okladka.path
-            # with Image.open(image_path) as img:
-            #     img_resized = ImageOps.fit(img, (200, 200), method=0, bleed=0.0, centering=(0.5, 0.5))
-            #     img_resized.save(image_path)
-    paginator = Paginator(ksiazki, 16)  # 20 książek na stronę
+    paginator = Paginator(ksiazki, 16)
     page = request.GET.get('page')
     try:
         ksiazki = paginator.page(page)
     except PageNotAnInteger:
-        # Jeśli strona nie jest liczbą całkowitą, dostarcz pierwszą stronę.
+
         ksiazki = paginator.page(1)
     except EmptyPage:
-        # Jeśli strona jest poza zakresem dostarcz ostatnią stronę wyników.
+
         ksiazki = paginator.page(paginator.num_pages)
     return render(request, 'lista_ksiazek.html', {'ksiazki': ksiazki})
 
@@ -89,15 +85,15 @@ def dodaj_do_koszyka(request, ksiazka_id):
         koszyk[str(ksiazka_id)] = {
             'tytul': ksiazka.tytul,
             'ilosc': 1,
-            'cena': str(ksiazka.cena),  # Konwersja Decimal do str przed zapisaniem do sesji
+            'cena': str(ksiazka.cena),
             'okladka': ksiazka.okladka.url if ksiazka.okladka else None,
             'autor': f"{ksiazka.autor.imie} {ksiazka.autor.nazwisko}",
         }
 
-    request.session['koszyk'] = json.loads(json.dumps(koszyk, default=str))  # Konwersja Decimal do str przed zapisaniem do sesji
-    # print(request.session['koszyk'])
+    request.session['koszyk'] = json.loads(json.dumps(koszyk, default=str))
+
     return redirect('lista_ksiazek')
-# views.py
+
 from django.shortcuts import render
 
 def usun_z_koszyka(request, ksiazka_id):
@@ -114,10 +110,10 @@ def wyswietl_koszyk(request):
     koszyk = request.session.get('koszyk', {})
     suma_cen = Decimal(0.0)
     if request.user.is_authenticated:
-        # Generuj rekomendacje tylko dla zalogowanych użytkowników
+
         rekomendacje_ksiazek = generuj_rekomendacje(request.user)
     else:
-        # Dla niezalogowanych użytkowników nie generuj rekomendacji
+
         rekomendacje_ksiazek = None
     for ksiazka_id, ksiazka_info in koszyk.items():
         suma_cen += Decimal(ksiazka_info['ilosc']) * Decimal(ksiazka_info['cena'])
@@ -142,7 +138,7 @@ def rejestracja(request):
         form = RejestracjaForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('logowanie')  # Przekieruj na stronę logowania po udanej rejestracji
+            return redirect('logowanie')
     else:
         form = RejestracjaForm()
 
@@ -156,7 +152,7 @@ def logowanie(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect('lista_ksiazek')  # Nazwa URL do przekierowania
+                return redirect('lista_ksiazek')
             else:
                 return render(request, 'login.html', {'error': 'Błędne dane logowania.'})
         else:
@@ -178,7 +174,7 @@ def zmniejsz_ilosc(request, ksiazka_id):
     if koszyk[str(ksiazka_id)]['ilosc'] > 1:
         koszyk[str(ksiazka_id)]['ilosc'] -= 1
     else:
-        del koszyk[str(ksiazka_id)]  # Usuń pozycję z koszyka, jeśli ilość jest równa 1
+        del koszyk[str(ksiazka_id)]
 
     request.session['koszyk'] = koszyk
     return redirect('wyswietl_koszyk')
@@ -188,7 +184,7 @@ def zmniejsz_ilosc(request, ksiazka_id):
 def ksiazka_szczegoly(request, slug):
     ksiazka = get_object_or_404(Ksiazka, slug=slug)
     if request.user.is_authenticated:
-        # Aktualizacja historii przeglądanych książek
+
         przegladana_ksiazka, created = PrzegladaneKsiazki.objects.get_or_create(
             user=request.user,
             ksiazka=ksiazka,
@@ -196,25 +192,25 @@ def ksiazka_szczegoly(request, slug):
         )
 
         if not created:
-            # Jeśli wpis już istnieje, aktualizujemy datę przeglądania
+
             przegladana_ksiazka.data_przegladania = timezone.now()
             przegladana_ksiazka.save()
 
-        # Ograniczenie historii do ostatnich 10 książek
+
         przegladane_ksiazki = PrzegladaneKsiazki.objects.filter(user=request.user).order_by('-data_przegladania')
         if przegladane_ksiazki.count() > 10:
-            # Usunięcie najstarszych wpisów, aby zachować tylko 10 najnowszych
+
             najstarsze_id_do_usuniecia = przegladane_ksiazki[10:].values_list('id', flat=True)
             PrzegladaneKsiazki.objects.filter(id__in=list(najstarsze_id_do_usuniecia)).delete()
 
     return render(request, 'ksiazka_szczegoly.html', {'ksiazka': ksiazka})
 def wydawnictwo_szczegoly(request, slug):
     wydawnictwo = get_object_or_404(Wydawnictwo, slug=slug)
-    # Pobranie książek dla wydawnictwa
+
     ksiazki = Ksiazka.objects.filter(wydawnictwo=wydawnictwo)
     return render(request, 'wydawnictwo_szczegoly.html', {
         'wydawnictwo': wydawnictwo,
-        'ksiazki': ksiazki  # Przekazanie listy książek do szablonu
+        'ksiazki': ksiazki
     })
 def ksiazki_wedlug_autora(request, slug):
     autor = get_object_or_404(Autor, slug=slug)
@@ -252,20 +248,19 @@ class WyszukiwarkaView(View):
             results.append({'label': kategorie.nazwa, 'url': kategorie.get_absolute_url()})
 
         return results
-stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def inicjuj_platnosc(request):
     try:
         koszyk = request.session.get('koszyk', {})
         suma_cen = Decimal(0.0)
 
-        # Obliczanie sumy cen na podstawie koszyka
+
         for ksiazka_id, ksiazka_info in koszyk.items():
             suma_cen += Decimal(ksiazka_info['ilosc']) * Decimal(ksiazka_info['cena'])
 
-        # Tworzenie PaymentIntent z obliczoną sumą cen
+
         payment_intent = stripe.PaymentIntent.create(
-            amount=int(suma_cen * 100),  # Kwota musi być w centach
+            amount=int(suma_cen * 100),
             currency='pln',
         )
 
@@ -277,28 +272,27 @@ def inicjuj_platnosc(request):
 def procesuj_platnosc(request):
     if request.method == "POST":
         try:
-            # Pobieranie tokenu Stripe przesłanego z formularza
+
             token = request.POST.get("stripeToken")
 
-            # Pobieranie sumy cen z sesji lub obliczanie jej na podstawie koszyka
+
             koszyk = request.session.get('koszyk', {})
             suma_cen = 0
             for ksiazka_id, ksiazka_info in koszyk.items():
                 suma_cen += ksiazka_info['ilosc'] * ksiazka_info['cena']
 
-            # Dokonanie płatności
             charge = stripe.Charge.create(
-                amount=int(suma_cen * 100),  # Kwota w centach
+                amount=int(suma_cen * 100),
                 currency="pln",
                 description="Opis płatności",
                 source=token,
             )
 
-            # Tutaj możesz dodać logikę po pomyślnej płatności, np. wysyłanie potwierdzenia e-mail
 
-            return redirect('sukces_platnosci')  # Przekieruj do strony potwierdzającej płatność
+
+            return redirect('sukces_platnosci')
         except stripe.error.StripeError as e:
-            # Obsługa błędów płatności Stripe
+
             return JsonResponse({'error': str(e)}, status=403)
     else:
         return JsonResponse({"error": "Request method not allowed"}, status=405)
@@ -312,24 +306,24 @@ def dodaj_dane_platnosci(request: HttpRequest):
         token = request.POST.get('stripeToken')
 
         try:
-            # Tu możesz dodać logikę przetwarzania płatności z użyciem tokenu, np.:
+
             charge = stripe.Charge.create(
-                amount=1000,  # Kwota w centach
+                amount=1000,
                 currency='pln',
                 description='Opis transakcji',
-                source=token,  # Użycie tokenu jako źródła płatności
+                source=token,
             )
 
-            # Przekierowanie po pomyślnej płatności lub renderowanie szablonu z potwierdzeniem
+
             return redirect('/potwierdz_platnosc/')
 
         except stripe.error.StripeError as e:
-            # Obsługa błędów Stripe
+
             body = e.json_body
             err  = body.get('error', {})
             return render(request, 'formularz_platnosci.html', {'error': err.get('message')})
 
-    # Dla GET, wyświetl formularz
+
     return render(request, 'formularz_platnosci.html')
 
 @csrf_exempt
@@ -338,12 +332,12 @@ def zrealizuj_platnosc(request):
         token = request.POST.get('stripeToken')
 
         try:
-            # Utworzenie opłaty
+
             charge = stripe.Charge.create(
-                amount=1000,  # Kwota w centach
+                amount=1000,
                 currency='pln',
                 description='Opis płatności',
-                source=token,  # Użycie tokenu płatności otrzymanego z formularza
+                source=token,
             )
 
             return JsonResponse({'status': 'potwierdzenie', 'message': 'Płatność zrealizowana pomyślnie.'})
@@ -378,19 +372,19 @@ def profil_uzytkownika(request):
 def zakladka_koszyka(request):
     if request.method == 'POST':
         if request.user.is_authenticated:
-            # Obsługa formularza dla zalogowanego użytkownika
+
             try:
                 profil_uzytkownika = ProfilUzytkownika.objects.get(user=request.user)
                 profil_form = ProfilUzytkownikaForm(request.POST, instance=profil_uzytkownika)
                 if profil_form.is_valid():
-                    # Zamiast zapisywać, przechowujemy dane w sesji
+
                     request.session['podsumowanie_danych'] = profil_form.cleaned_data
                     return redirect('podsumowanie_danych')
             except ProfilUzytkownika.DoesNotExist:
                 messages.error(request, 'Profil użytkownika nie istnieje.')
                 return redirect('profil_uzytkownika')
         else:
-            # Obsługa formularza dla niezalogowanego użytkownika
+
             profil_form = ProfilUzytkownikaForm(request.POST)
             if profil_form.is_valid():
                 request.session['podsumowanie_danych'] = profil_form.cleaned_data
@@ -399,11 +393,11 @@ def zakladka_koszyka(request):
                 messages.error(request, 'Wystąpił błąd przy przesyłaniu danych.')
     else:
         if request.user.is_authenticated:
-            # Dla zalogowanych, przekieruj od razu do podsumowania z danymi z profilu
+
             try:
                 profil_uzytkownika = ProfilUzytkownika.objects.get(user=request.user)
                 profil_form = ProfilUzytkownikaForm(instance=profil_uzytkownika)
-                # Przechowaj dane w sesji
+
                 request.session['podsumowanie_danych'] = {
                     'adres': profil_uzytkownika.adres,
                     'kod_pocztowy': profil_uzytkownika.kod_pocztowy,
@@ -416,7 +410,7 @@ def zakladka_koszyka(request):
                 user_form = UserEditForm(instance=request.user)
         else:
             profil_form = ProfilUzytkownikaForm()
-            user_form = None  # Dla niezalogowanych nie pokazujemy formularza użytkownika
+            user_form = None
 
     context = {
         'user_form': user_form if request.user.is_authenticated else None,
@@ -427,13 +421,13 @@ def zakladka_koszyka(request):
     return render(request, 'podsumowanie.html', context)
 
 def podsumowanie_danych(request):
-    # Pobieranie danych do wysyłki z sesji
+
     dane = request.session.get('podsumowanie_danych', None)
     if dane is None:
         messages.error(request, 'Brak danych do wyświetlenia.')
         return redirect('lista_ksiazek')
 
-    # Pobieranie danych o książkach w koszyku
+
     koszyk = request.session.get('koszyk', {})
     ksiazki_w_koszyku = []
     suma_cen = Decimal('0.00')
@@ -449,7 +443,7 @@ def podsumowanie_danych(request):
             'cena_za_pozycje': cena_za_pozycje,
         })
 
-    # Przekazywanie danych do wysyłki oraz informacji o książkach i ich łącznej cenie do szablonu
+
     context = {
         'dane': dane,
         'ksiazki_w_koszyku': ksiazki_w_koszyku,
@@ -460,7 +454,6 @@ def podsumowanie_danych(request):
 
 
 
-#Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
@@ -471,7 +464,6 @@ class SesjaStripe(View):
         try:
             profil_uzytkownika = ProfilUzytkownika.objects.get(user=user)
             if not all([ profil_uzytkownika.adres, profil_uzytkownika.kod_pocztowy, profil_uzytkownika.miasto, profil_uzytkownika.wojewodztwo]):
-                # Jeśli jakiekolwiek wymagane dane są niekompletne, wyświetl komunikat i przekieruj
                 messages.error(request,
                                "Proszę uzupełnić wszystkie wymagane dane w profilu przed przejściem do płatności.")
                 return redirect('profil_uzytkownika')
@@ -498,8 +490,6 @@ class SesjaStripe(View):
                     "product_data": {
                         "name": ksiazka_info['tytul'],
                         "description": ksiazka_info['autor'],
-                        # Zakomentowane, ponieważ wymaga konfiguracji URL obrazka
-                       # "media": ksiazka_info.get('okladka')],
                     },
                 },
                 "quantity": ksiazka_info['ilosc'],
@@ -514,7 +504,7 @@ class SesjaStripe(View):
             success_url=settings.PAYMENT_SUCCESS_URL,
             cancel_url=settings.PAYMENT_CANCEL_URL,
             metadata={
-                'order_id': str(nowe_zamowienie.id),  # Przekazywanie identyfikatora zamówienia do metadanych sesji
+                'order_id': str(nowe_zamowienie.id),
                 'user_id': str(user.id)
             }
         )
@@ -552,10 +542,10 @@ class StripeWebhookView(View):
         try:
             event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
         except ValueError as e:
-            # Invalid payload
+
             return HttpResponse(status=400)
         except stripe.error.SignatureVerificationError as e:
-            # Invalid signature
+
             return HttpResponse(status=400)
 
         if event['type'] == 'checkout.session.completed':
@@ -569,11 +559,11 @@ class StripeWebhookView(View):
                     zamowienie.zaplacone = True
                     zamowienie.save()
 
-                    # Usuwanie koszyka z sesji użytkownika
+
                     user_sessions = Session.objects.filter(session_data__contains=f'"_auth_user_id":"{user_id}"')
                     for session in user_sessions:
                         session_data = session.get_decoded()
-                        session_data.pop('koszyk', None)  # Usuń klucz 'koszyk'
+                        session_data.pop('koszyk', None)
                         session.session_data = json.dumps(session_data)
                         session.save()
 
@@ -587,9 +577,9 @@ class StripeWebhookView(View):
 def szczegoly_ksiazki(request, pk):
     ksiazka = get_object_or_404(Ksiazka, pk=pk)
     if request.user.is_authenticated:
-        PrzegladaneKsiazki.objects.filter(user=request.user, ksiazka=ksiazka).delete() # Usuń istniejące wpisy tej książki
-        PrzegladaneKsiazki.objects.create(user=request.user, ksiazka=ksiazka) # Dodaj nowy wpis
-        # Ogranicz historię do ostatnich 10 książek
+        PrzegladaneKsiazki.objects.filter(user=request.user, ksiazka=ksiazka).delete()
+        PrzegladaneKsiazki.objects.create(user=request.user, ksiazka=ksiazka)
+
         przegladane_ksiazki = PrzegladaneKsiazki.objects.filter(user=request.user).order_by('-data_przegladania')
         if przegladane_ksiazki.count() > 10:
             najstarsza_ksiazka_do_usuniecia = przegladane_ksiazki.last()
@@ -605,21 +595,17 @@ def historia_przegladanych_ksiazek(request):
 
 
 def generuj_rekomendacje(user):
-    # Pobranie zamówionych i przeglądanych książek
+
     zamowione_ksiazki = PozycjaZamowienia.objects.filter(
         zamowienie__user=user, zamowienie__zaplacone=True
     ).select_related('ksiazka').values_list('ksiazka__id', 'ksiazka__autor', 'ksiazka__kategorie')
 
     przegladane_ksiazki = PrzegladaneKsiazki.objects.filter(user=user).select_related('ksiazka').values_list(
         'ksiazka__id', 'ksiazka__autor', 'ksiazka__kategorie')
-
-    # Łączenie informacji o zamówionych i przeglądanych książkach
     wszystkie_ksiazki = list(chain(zamowione_ksiazki, przegladane_ksiazki))
 
-    # Pobieranie ID książek, które użytkownik już zna (zamówione lub przeglądane)
     znane_ksiazki_ids = {ksiazka_id for ksiazka_id, _, _ in wszystkie_ksiazki}
 
-    # Wybieranie książek tego samego autora i kategorii
     autor_i_kategoria_counter = Counter((autor, kategoria) for _, autor, kategoria in wszystkie_ksiazki)
     ksiazki_do_rekomendacji = []
 
@@ -635,7 +621,6 @@ def generuj_rekomendacje(user):
                 ksiazki_do_rekomendacji.append(ksiazka)
                 znane_ksiazki_ids.add(ksiazka.id)
 
-    # Jeżeli potrzebujemy więcej książek, szukamy w najpopularniejszych kategoriach
     if len(ksiazki_do_rekomendacji) < 10:
         kategoria_counter = Counter(kategoria for _, _, kategoria in wszystkie_ksiazki)
         for kategoria, _ in kategoria_counter.most_common():
@@ -668,35 +653,32 @@ def zaawansowane_wyszukiwanie(request):
         cleaned_data = form.cleaned_data
         qs = Ksiazka.objects.all()
 
-        # Filtracja po roku wydania
         if cleaned_data.get('rok_wydania_od'):
             qs = qs.filter(rok_wydania__gte=cleaned_data['rok_wydania_od'])
 
-        # Filtracja po cenie
         if cleaned_data.get('cena_od'):
             qs = qs.filter(cena__gte=cleaned_data['cena_od'])
         if cleaned_data.get('cena_do'):
             qs = qs.filter(cena__lte=cleaned_data['cena_do'])
 
-        # Filtracja po typie okładki
         if cleaned_data.get('typ_okladki') and cleaned_data['typ_okladki'] != '':
             qs = qs.filter(typ_okladki=cleaned_data['typ_okladki'])
 
         if cleaned_data.get('autor'):
-            # Rozdziel wpisane dane na imię i nazwisko
+
             autor_parts = cleaned_data['autor'].split()
             if len(autor_parts) == 1:
-                # Jeśli użytkownik wpisał tylko jedno słowo, szukaj w imionach i nazwiskach
+
                 qs = qs.filter(Q(autor__imie__icontains=autor_parts[0]) | Q(autor__nazwisko__icontains=autor_parts[0]))
             elif len(autor_parts) > 1:
-                # Załóżmy, że wpisano imię i nazwisko
+
                 qs = qs.filter(autor__imie__icontains=autor_parts[0], autor__nazwisko__icontains=autor_parts[1])
 
-            # Filtracja po kategorii
+
         if cleaned_data.get('kategoria'):
             qs = qs.filter(kategorie__nazwa__icontains=cleaned_data['kategoria'])
 
-            # Filtracja po wydawnictwie
+
         if cleaned_data.get('wydawnictwo'):
             qs = qs.filter(wydawnictwo__nazwa__icontains=cleaned_data['wydawnictwo'])
 
@@ -707,13 +689,11 @@ def zaawansowane_wyszukiwanie(request):
 
 
 def rekomendacje_zakupy():
-    # Pobieranie 10 najczęściej kupowanych książek, już posortowanych
 
     najpopularniejsze_ksiazki = PozycjaZamowienia.objects.filter(
         zamowienie__zaplacone=True
     ).values(
         'ksiazka', 'ksiazka__tytul', 'ksiazka__slug', 'ksiazka__okladka', 'ksiazka__cena', 'ksiazka__id'
-        # Uwzględnienie ceny
     ).annotate(
         total=Count('ksiazka')
     ).order_by('-total')[:10]

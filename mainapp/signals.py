@@ -13,6 +13,6 @@ def utworz_profil_uzytkownika(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Ksiazka)
 def dodaj_zakladke_po_dodaniu_ksiazki(sender, instance, created, **kwargs):
     if created:
-        # Jeśli nowa książka została utworzona, dodaj zakładkę
+
         Zakladka.objects.create( ksiazka=instance)
 
