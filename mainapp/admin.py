@@ -29,7 +29,6 @@ class KsiazkaAdmin(admin.ModelAdmin):
     list_display = ('tytul', 'cena', 'autor', 'opis', 'okladka','wydawnictwo','typ_okladki', 'rok_wydania')
     search_fields = ['tytul', 'autor__imie', 'autor__nazwisko','wydawnictwo','typ_okladki', 'rok_wydania']
     filter_horizontal = ('kategorie',)
-    repopulated_fields = {'slug': ('tytul',)}
     exclude = ('slug',)
 
 admin.site.register(Ksiazka, KsiazkaAdmin)

@@ -106,47 +106,46 @@ class AutorModelTest(TestCase):
         max_length = autor._meta.get_field('nazwisko').max_length
         self.assertEquals(max_length, 100)
 
-class ZamowienieModelTests(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        # Utwórz użytkownika
-        cls.user = User.objects.create_user(username='testuser', password='12345')
+    class ZamowienieModelTests(TestCase):
+        @classmethod
+        def setUpTestData(cls):
+            cls.user = User.objects.create_user(username='testuser', password='12345')
 
-        # Utwórz książkę
-        autor = Autor.objects.create(imie='Jan', nazwisko='Nowak')
-        wydawnictwo = Wydawnictwo.objects.create(nazwa='Wydawnictwo Testowe', opis='Opis testowego wydawnictwa')
-        cls.ksiazka = Ksiazka.objects.create(
-            tytul='Przykladowa Ksiazka',
-            autor=autor,
-            opis='Opis testowej ksiazki',
-            cena=39.99,
-            wydawnictwo=wydawnictwo
-        )
+            # Utwórz książkę
+            autor = Autor.objects.create(imie='Jan', nazwisko='Nowak')
+            wydawnictwo = Wydawnictwo.objects.create(nazwa='Wydawnictwo Testowe', opis='Opis testowego wydawnictwa')
+            cls.ksiazka = Ksiazka.objects.create(
+                tytul='Przykladowa Ksiazka',
+                autor=autor,
+                opis='Opis testowej ksiazki',
+                cena=39.99,
+                wydawnictwo=wydawnictwo
+            )
 
-        # Utwórz zamówienie
-        cls.zamowienie = Zamowienie.objects.create(
-            user=cls.user,
-            adres='Testowa ulica 123',
-            kod_pocztowy='00-000',
-            miasto='Testowe Miasto',
-            wojewodztwo='Testowe Województwo'
-        )
+            # Utwórz zamówienie
+            cls.zamowienie = Zamowienie.objects.create(
+                user=cls.user,
+                adres='Testowa ulica 123',
+                kod_pocztowy='00-000',
+                miasto='Testowe Miasto',
+                wojewodztwo='Testowe Województwo'
+            )
 
-    def test_zamowienie_creation(self):
-        self.assertTrue(isinstance(self.zamowienie, Zamowienie))
-        self.assertEqual(self.zamowienie.__str__(), f"Zamówienie {self.zamowienie.id} użytkownika {self.user.username} - niezapłacone")
+        def test_zamowienie_creation(self):
+            self.assertTrue(isinstance(self.zamowienie, Zamowienie))
+            self.assertEqual(self.zamowienie.__str__(), f"Zamówienie {self.zamowienie.id} użytkownika {self.user.username} - niezapłacone")
 
-    def test_zamowienie_with_pozycja(self):
-        # Dodaj pozycję do zamówienia
-        PozycjaZamowienia.objects.create(
-            zamowienie=self.zamowienie,
-            ksiazka=self.ksiazka,
-            ilosc=1,
-            cena=self.ksiazka.cena
-        )
-        self.assertEqual(self.zamowienie.pozycje.count(), 1)
-        pozycja = self.zamowienie.pozycje.first()
-        self.assertEqual(pozycja.ksiazka, self.ksiazka)
-        self.assertEqual(pozycja.ilosc, 1)
-        self.assertEqual(float(pozycja.cena), float(self.ksiazka.cena))
+        def test_zamowienie_with_pozycja(self):
+
+            PozycjaZamowienia.objects.create(
+                zamowienie=self.zamowienie,
+                ksiazka=self.ksiazka,
+                ilosc=1,
+                cena=self.ksiazka.cena
+            )
+            self.assertEqual(self.zamowienie.pozycje.count(), 1)
+            pozycja = self.zamowienie.pozycje.first()
+            self.assertEqual(pozycja.ksiazka, self.ksiazka)
+            self.assertEqual(pozycja.ilosc, 1)
+            self.assertEqual(float(pozycja.cena), float(self.ksiazka.cena))
 

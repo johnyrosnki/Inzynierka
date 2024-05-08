@@ -31,9 +31,7 @@ class ProfilUzytkownikaForm(forms.ModelForm):
         fields = ['adres', 'kod_pocztowy', 'miasto', 'wojewodztwo']
 
 class ZaawansowaneWyszukiwanieForm(forms.Form):
-
     autor = forms.CharField(required=False, label='Autor', widget=forms.TextInput(attrs={'placeholder': 'Imię i nazwisko'}))
-
     kategoria = forms.ModelChoiceField(queryset=Kategoria.objects.all(), required=False, label='Kategoria',
                                        empty_label="Wybierz kategorię")
     wydawnictwo = forms.ModelChoiceField(queryset=Wydawnictwo.objects.all(), required=False, label='Wydawnictwo',

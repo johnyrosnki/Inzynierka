@@ -31,6 +31,7 @@ import json
 from django.http import JsonResponse
 from django.conf import settings
 from itertools import chain
+
 from django.urls import reverse
 from django.contrib.auth.models import User
 
@@ -57,7 +58,7 @@ def lista_ksiazek(request):
     for ksiazka in ksiazki:
         if ksiazka.okladka:
             image_path = ksiazka.okladka.path
-    paginator = Paginator(ksiazki, 16)
+    paginator = Paginator(ksiazki, 18)
     page = request.GET.get('page')
     try:
         ksiazki = paginator.page(page)
@@ -73,10 +74,8 @@ def lista_ksiazek(request):
 
 def dodaj_do_koszyka(request, ksiazka_id):
     ksiazka = Ksiazka.objects.get(pk=ksiazka_id)
-
     if 'koszyk' not in request.session:
         request.session['koszyk'] = {}
-
     koszyk = request.session['koszyk']
 
     if str(ksiazka_id) in koszyk:
@@ -89,12 +88,9 @@ def dodaj_do_koszyka(request, ksiazka_id):
             'okladka': ksiazka.okladka.url if ksiazka.okladka else None,
             'autor': f"{ksiazka.autor.imie} {ksiazka.autor.nazwisko}",
         }
-
     request.session['koszyk'] = json.loads(json.dumps(koszyk, default=str))
-
     return redirect('lista_ksiazek')
 
-from django.shortcuts import render
 
 def usun_z_koszyka(request, ksiazka_id):
     koszyk = request.session.get('koszyk', {})
@@ -145,18 +141,16 @@ def rejestracja(request):
     return render(request, 'rejestracja.html', {'form': form})
 
 def logowanie(request):
-    def logowanie_view(request):
-        if request.method == 'POST':
-            username = request.POST.get('username')
-            password = request.POST.get('password')
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('lista_ksiazek')
-            else:
-                return render(request, 'login.html', {'error': 'Błędne dane logowania.'})
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect('lista_ksiazek')
         else:
-            return render(request, 'login.html')
+            messages.error(request, 'Błędne dane logowania.')
 
     return render(request, 'logowanie.html')
 
@@ -249,82 +243,6 @@ class WyszukiwarkaView(View):
 
         return results
 
-def inicjuj_platnosc(request):
-    try:
-        koszyk = request.session.get('koszyk', {})
-        suma_cen = Decimal(0.0)
-
-
-        for ksiazka_id, ksiazka_info in koszyk.items():
-            suma_cen += Decimal(ksiazka_info['ilosc']) * Decimal(ksiazka_info['cena'])
-
-
-        payment_intent = stripe.PaymentIntent.create(
-            amount=int(suma_cen * 100),
-            currency='pln',
-        )
-
-        return JsonResponse({'clientSecret': payment_intent.client_secret})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=403)
-
-
-def procesuj_platnosc(request):
-    if request.method == "POST":
-        try:
-
-            token = request.POST.get("stripeToken")
-
-
-            koszyk = request.session.get('koszyk', {})
-            suma_cen = 0
-            for ksiazka_id, ksiazka_info in koszyk.items():
-                suma_cen += ksiazka_info['ilosc'] * ksiazka_info['cena']
-
-            charge = stripe.Charge.create(
-                amount=int(suma_cen * 100),
-                currency="pln",
-                description="Opis płatności",
-                source=token,
-            )
-
-
-
-            return redirect('sukces_platnosci')
-        except stripe.error.StripeError as e:
-
-            return JsonResponse({'error': str(e)}, status=403)
-    else:
-        return JsonResponse({"error": "Request method not allowed"}, status=405)
-
-
-
-
-
-def dodaj_dane_platnosci(request: HttpRequest):
-    if request.method == 'POST':
-        token = request.POST.get('stripeToken')
-
-        try:
-
-            charge = stripe.Charge.create(
-                amount=1000,
-                currency='pln',
-                description='Opis transakcji',
-                source=token,
-            )
-
-
-            return redirect('/potwierdz_platnosc/')
-
-        except stripe.error.StripeError as e:
-
-            body = e.json_body
-            err  = body.get('error', {})
-            return render(request, 'formularz_platnosci.html', {'error': err.get('message')})
-
-
-    return render(request, 'formularz_platnosci.html')
 
 @csrf_exempt
 def zrealizuj_platnosc(request):

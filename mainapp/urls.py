@@ -4,7 +4,7 @@ from .views import dodaj_ksiazke, profil_uzytkownika, podsumowanie_danych, Sesja
     Anulowanie, StripeWebhookView
 from .views import lista_ksiazek, ksiazki_wedlug_kategorii, dodaj_do_koszyka, wyswietl_koszyk, usun_z_koszyka, \
     rejestracja, logowanie, zwieksz_ilosc, zmniejsz_ilosc, ksiazka_szczegoly, WyszukiwarkaView, ksiazki_wedlug_autora, \
-    wydawnictwo_szczegoly, inicjuj_platnosc, procesuj_platnosc, dodaj_dane_platnosci, zakladka_koszyka, zaawansowane_wyszukiwanie, \
+    wydawnictwo_szczegoly,  zakladka_koszyka, zaawansowane_wyszukiwanie, \
     podsumowanie_danych, rekomendacje
 
 from django.conf import settings
@@ -13,8 +13,7 @@ from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
                   path('', views.base, name='base'),
-                  path('ksiazki_wedlug_kategorii/<slug:slug>/', ksiazki_wedlug_kategorii,
-                       name='ksiazki_wedlug_kategorii'),
+                  path('ksiazki_wedlug_kategorii/<slug:slug>/', ksiazki_wedlug_kategorii,name='ksiazki_wedlug_kategorii'),
                   path('lista_ksiazek/', lista_ksiazek, name='lista_ksiazek'),
                   path('dodaj_do_koszyka/<int:ksiazka_id>/', dodaj_do_koszyka, name='dodaj_do_koszyka'),
                   path('koszyk/', wyswietl_koszyk, name='wyswietl_koszyk'),
@@ -28,10 +27,6 @@ urlpatterns = [
                   path('ksiazki_wedlug_autora/<slug:slug>/', ksiazki_wedlug_autora, name='ksiazki_wedlug_autora'),
                   path('wydawnictwo_szczegoly/<slug:slug>/', wydawnictwo_szczegoly, name='wydawnictwo_szczegoly'),
                   path('wyszukiwarka/', WyszukiwarkaView.as_view(), name='wyszukiwarka'),
-                  path('inicjuj_platnosc/', views.inicjuj_platnosc, name='inicjuj_platnosc'),
-                  path('procesuj_platnosc/', procesuj_platnosc, name='procesuj_platnosc'),
-
-                  path('formularz_platnosci/', dodaj_dane_platnosci, name='formularz_platnosci'),
                   path('profil/', profil_uzytkownika, name='profil_uzytkownika'),
                   path('podsumowanie/', zakladka_koszyka, name='podsumowanie'),
                   path('podsumowanie_danych/', podsumowanie_danych, name='podsumowanie_danych'),
