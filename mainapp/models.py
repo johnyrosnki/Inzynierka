@@ -29,7 +29,7 @@ class Kategoria(models.Model):
 
     class Meta:
         verbose_name = "Kategoria"
-        verbose_name_plural = "gorie"
+        verbose_name_plural = "Kategorie"
 
     def __str__(self):
         return self.nazwa
